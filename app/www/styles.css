@@ -1,0 +1,102 @@
+/* www/styles.css */
+
+        /* Hela panelen - gör så att listrutorna går uppåt om det behövs */
+    html, body {
+      overflow-y: auto !important;
+    }
+
+    /* Minska vit yta runt leaflet-karta */
+    .leaflet {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .leaflet-container {
+      background: transparent !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 0;
+    }
+
+    .leaflet-tooltip {
+        z-index: 1000;
+        white-space: nowrap;
+      }
+      
+    .leaflet-control-attribution {
+      display: none !important;
+    }
+
+    #karta_kommun {
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 300px !important;
+      max-height: none !important;
+      height: 100% !important;
+    }
+
+    h1, h2, h3, h4 {
+      font-size: 12px !important;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .filter-panel {
+      font-size: 10px !important;
+    }
+
+    .filters-pane select,
+    .filters-pane input[type='text'] {
+      height: 20px !important;
+      padding: 2px 6px !important;
+      font-size: 10px !important;
+      line-height: 1.2 !important;
+      box-sizing: border-box;
+    }
+
+    .filters-pane select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url(\"data:image/svg+xml;utf8,<svg fill='black' height='8' viewBox='0 0 16 16' width='8' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>\");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      background-size: 8px 8px;
+      padding-right: 16px !important;
+    }
+
+    .filter-panel input[type='text'] {
+      background-image: none !important;
+    }
+
+    .filter-panel label {
+      font-size: 10px !important;
+      margin-bottom: 2px;
+      font-weight: bold;
+    }
+
+    table.dataTable td,
+    table.dataTable th {
+      font-size: 10px !important;
+      padding: 4px 6px !important;
+    }
+
+    .dataTables_filter input {
+      font-size: 10px !important;
+      height: 20px !important;
+      padding: 2px 6px !important;
+    }
+
+    .row {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    .col-sm-6, .col-md-6, .col-lg-6 {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+
