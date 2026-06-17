@@ -1,102 +1,305 @@
 /* www/styles.css */
 
-        /* Hela panelen - gör så att listrutorna går uppåt om det behövs */
-    html, body {
-      overflow-y: auto !important;
-    }
+/* Typsnitt: Fieldwork Geo Demibold */
+@font-face {
+  font-family: "Fieldwork Geo Demibold";
+  src: url("FieldworkGeo-Bold-Fixed.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
-    /* Minska vit yta runt leaflet-karta */
-    .leaflet {
-      margin: 0 !important;
-      padding: 0 !important;
-    }
+/* Roboto Light – AVAKTIVERAD: filen Roboto-Light.ttf saknas i www/.
+   Lägg tillbaka filen och avkommentera om du vill ha vikt 300.
+@font-face {
+  font-family: "Roboto";
+  src: url("Roboto-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+*/
 
-    .leaflet-container {
-      background: transparent !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border: none !important;
-      width: 100% !important;
-      height: 100% !important;
-      z-index: 0;
-    }
+/* Roboto Regular */
+@font-face {
+  font-family: "Roboto";
+  src: url("Roboto-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
-    .leaflet-tooltip {
-        z-index: 1000;
-        white-space: nowrap;
-      }
-      
-    .leaflet-control-attribution {
-      display: none !important;
-    }
+/* Roboto Medium */
+@font-face {
+  font-family: "Roboto";
+  src: url("Roboto-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
 
-    #karta_kommun {
-      margin: 0 !important;
-      padding: 0 !important;
-      min-height: 300px !important;
-      max-height: none !important;
-      height: 100% !important;
-    }
+/* Roboto Bold */
+@font-face {
+  font-family: "Roboto";
+  src: url("Roboto-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
-    h1, h2, h3, h4 {
-      font-size: 12px !important;
-      margin-top: 10px;
-      margin-bottom: 6px;
-    }
+/* Färgpalett enligt återkoppling */
+:root {
+  --rd-bla: #00374e;
+  --rd-beige: #f3e8d9;
+  --rd-gron: #00a064;
+}
 
-    .filter-panel {
-      font-size: 10px !important;
-    }
+/* Hela panelen - gör så att listrutorna går uppåt om det behövs.
+   Vikt 400 (Regular) eftersom Roboto Light inte finns lokalt. */
+html, body {
+  overflow-y: auto !important;
+  font-family: "Roboto", Arial, sans-serif;
+  font-weight: 400;
+  color: var(--rd-bla);
+}
 
-    .filters-pane select,
-    .filters-pane input[type='text'] {
-      height: 20px !important;
-      padding: 2px 6px !important;
-      font-size: 10px !important;
-      line-height: 1.2 !important;
-      box-sizing: border-box;
-    }
+/* Minska vit yta runt leaflet-karta */
+.leaflet {
+  margin: 0 !important;
+  padding: 0 !important;
+}
 
-    .filters-pane select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image: url(\"data:image/svg+xml;utf8,<svg fill='black' height='8' viewBox='0 0 16 16' width='8' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>\");
-      background-repeat: no-repeat;
-      background-position: right 6px center;
-      background-size: 8px 8px;
-      padding-right: 16px !important;
-    }
+/* OBS: ingen global height-regel pa .leaflet-container - den slog ut flik 2:s
+   lanskarta. Hojden styrs av #karta_kommun (flik 1) respektive leafletOutput(height=...) (flik 2). */
+.leaflet-container {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  width: 100% !important;
+  z-index: 0;
+}
 
-    .filter-panel input[type='text'] {
-      background-image: none !important;
-    }
+.leaflet-tooltip {
+  z-index: 1000;
+  white-space: nowrap;
+}
 
-    .filter-panel label {
-      font-size: 10px !important;
-      margin-bottom: 2px;
-      font-weight: bold;
-    }
+.leaflet-control-attribution {
+  display: none !important;
+}
 
-    table.dataTable td,
-    table.dataTable th {
-      font-size: 10px !important;
-      padding: 4px 6px !important;
-    }
+#karta_kommun {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 300px !important;
+  max-height: none !important;
+  height: 100% !important;
+}
 
-    .dataTables_filter input {
-      font-size: 10px !important;
-      height: 20px !important;
-      padding: 2px 6px !important;
-    }
+/* Rubriker (punkt 2: 2–4 pt större, Fieldwork Geo Demibold) */
+h1, h2, h3, h4 {
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-weight: 700;
+  color: var(--rd-bla);
+  font-size: 20px !important;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
 
-    .row {
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
+/* Filterpanelen i din ui.R heter .sidTabell */
+.sidTabell {
+  padding: 15px;
+  background-color: var(--rd-beige);
+  border: 1px solid var(--rd-bla);
+  border-radius: 4px;
+  font-size: 10px !important;
+}
 
-    .col-sm-6, .col-md-6, .col-lg-6 {
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-    }
+.sidTabell h4,
+.sidTabell label {
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-weight: 700;
+  color: var(--rd-bla);
+}
 
+.sidTabell label {
+  font-size: 10px !important;
+  margin-bottom: 2px;
+}
+
+/* Behåll även gamla klasser om de används någon annanstans */
+.filter-panel {
+  font-size: 10px !important;
+}
+
+.filter-panel label {
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-size: 10px !important;
+  margin-bottom: 2px;
+  font-weight: 700;
+  color: var(--rd-bla);
+}
+
+.filters-pane select,
+.filters-pane input[type='text'] {
+  height: 20px !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box;
+}
+
+.filters-pane select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='8' viewBox='0 0 16 16' width='8' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 8px 8px;
+  padding-right: 16px !important;
+}
+
+.filter-panel input[type='text'] {
+  background-image: none !important;
+}
+
+/* Shiny selectInput/selectize */
+.selectize-input {
+  border: 1px solid var(--rd-bla);
+  border-radius: 4px;
+  box-shadow: none;
+  font-size: 10px !important;
+  min-height: 24px !important;
+  padding: 3px 6px !important;
+}
+
+.selectize-input.focus {
+  border-color: var(--rd-gron);
+  box-shadow: 0 0 0 2px rgba(0, 160, 100, 0.18);
+}
+
+.selectize-dropdown,
+.selectize-dropdown-content {
+  font-size: 10px !important;
+}
+
+/* Nedladdningsknappar */
+.btn-default {
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--rd-bla);
+  border-color: var(--rd-bla);
+  margin-bottom: 8px;
+  white-space: normal;
+  text-align: left;
+}
+
+.btn-default:hover,
+.btn-default:focus {
+  color: #ffffff;
+  background-color: var(--rd-gron);
+  border-color: var(--rd-gron);
+}
+
+/* DT-tabell */
+table.dataTable td,
+table.dataTable th {
+  font-size: 10px !important;
+  padding: 4px 6px !important;
+}
+
+table.dataTable th {
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-weight: 700;
+  color: var(--rd-bla);
+}
+
+/* Sök-rutan i DT (punkt 8: Fieldwork + mer framträdande ruta) */
+.dataTables_filter label {
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-weight: 700;
+  font-size: 14px !important;
+  color: var(--rd-bla);
+}
+
+.dataTables_filter input {
+  font-size: 13px !important;
+  height: 34px !important;
+  width: 260px;
+  padding: 4px 10px !important;
+  border: 2px solid var(--rd-bla);
+  border-radius: 6px;
+  margin-left: 10px;
+  background-color: #ffffff;
+}
+
+.dataTables_filter input:focus {
+  outline: none;
+  border-color: var(--rd-gron);
+  box-shadow: 0 0 0 3px rgba(0, 160, 100, 0.20);
+}
+
+/* Egna DT-filterpopups */
+.dt-filter-pop {
+  position: absolute;
+  z-index: 9999;
+  min-width: 260px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 10px;
+}
+
+.dt-filter-pop .title {
+  font-size: 12px;
+  font-family: "Fieldwork Geo Demibold", Arial, sans-serif;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--rd-bla);
+}
+
+.dt-filter-select {
+  width: 100%;
+}
+
+.select2-container {
+  width: 100% !important;
+}
+
+.dt-header-text {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  color: var(--rd-bla);
+}
+
+.dt-filter-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+/* Plotly/stapel */
+#stapel .main-svg,
+#stapel .hoverlayer,
+#stapel .modebar,
+#stapel .cursor-crosshair {
+  cursor: default !important;
+}
+
+/* Bootstrap-rader/kolumner */
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.col-sm-6, .col-md-6, .col-lg-6 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
