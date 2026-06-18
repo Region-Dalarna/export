@@ -5,6 +5,15 @@ navbarPage(
   title = "Exportarena Dalarna",
   id = "huvudflik",
   collapsible = TRUE,
+
+  header = tags$head(
+    tags$link(
+      rel = "icon",
+      type = "image/x-icon",
+      href = "favicon.ico"
+    )
+  ),
+
   tabPanel("Företagsstatistik", foretag_ui),
   tabPanel("Handel",            handel_ui)
 )
