@@ -17,6 +17,12 @@ library(htmltools)
 library(here)
 library(tidyr)
 
+# --- Inställningar -------------------------------------------------
+# Styr om branschgruppen "Övrigt" ska filtreras bort i Branschgrupper-diagrammet
+# (flik Företagsstatistik). TRUE = dölj Övrigt, FALSE = visa Övrigt.
+filtrera_bort_ovrigt <- TRUE
+# ------------------------------------------------------------------
+
 # Servrar först (laddar data + definierar funktioner), sedan UI-objekten.
 source("foretag_server.R", encoding = "utf-8")
 source("handel_server.R",  encoding = "utf-8")

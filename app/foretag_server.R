@@ -133,12 +133,12 @@ if (file.exists(.mapping_path)) {
       Branschgrupp = `Branschgrupp`
     ) %>%
     dplyr::distinct(SNI_kod, .keep_all = TRUE)
-  
+
   dataset_df <- dataset_df %>%
     dplyr::mutate(SNI_kod = as.character(SNI_kod)) %>%
     dplyr::left_join(.sni_map, by = "SNI_kod") %>%
-    dplyr::mutate(Branschgrupp = tidyr::replace_na(Branschgrupp, "Övrigt")) 
-  
+    dplyr::mutate(Branschgrupp = tidyr::replace_na(Branschgrupp, "Övrigt"))
+
   rm(.sni_map)
 } else {
   warning("Mappningsfilen hittades inte: ", .mapping_path,
@@ -189,47 +189,47 @@ system.time({
 
 
 foretag_server <- function(input, output, session) {
-  
+
   ## Filtermeny-bearbetning
   observe({
     req(dataset_df)
     updateSelectInput(session, "juridisk",
                       choices = c("Alla", sort(unique(trimws(dataset_df$Branschgrupp)))),
                       selected = "Alla")
-    
+
     updateSelectInput(session, "anstallda",
                       choices = c("Alla", levels(dataset_df$Storleksklass)),
                       selected = "Alla")
-    
+
     updateSelectizeInput(session, "kommun",
                          choices = c("Alla" = "Alla", setNames(
                            unique(trimws(dataset_df$Kommunkod)),
                            unique(trimws(dataset_df$Kommun)))),
                          selected = "Alla",
                          server = TRUE)
-    
+
     updateSelectInput(session, "exportVolym",
                       choices = c("Alla" = "Alla", levels(dataset_df$ExpStklText)),
                       selected = "Alla")
-    
+
     updateSelectInput(session, "exportRegion",
                       choices = c("Alla" = "Alla", "Europa", "Afrika", "Asien", "Nordamerika", "Sydamerika"),
                       selected = "Alla")
-    
+
     updateSelectInput(session, "importVolym",
                       choices = c("Alla" = "Alla", levels(dataset_df$ImpStklText)),
                       selected = "Alla")
-    
+
     updateSelectInput(session, "importRegion",
                       choices = c("Alla" = "Alla", "Europa", "Afrika", "Asien", "Nordamerika", "Sydamerika"),
                       selected = "Alla")
   })
-  
+
   # Filtrera företagsdata
   data_filt <- reactive({
     req(input$juridisk, input$anstallda)
     df <- dataset_df
-    
+
     if (!is.null(input$kommun) && input$kommun != "Alla") {
       df <- df %>% dplyr::filter(Kommunkod == input$kommun)
     }
@@ -253,11 +253,11 @@ foretag_server <- function(input, output, session) {
     }
     df
   })
-  
+
   data_filt_no_kommun <- reactive({
     req(input$juridisk, input$anstallda)
     df <- dataset_df
-    
+
     # DO NOT apply the kommun filter here
     if (input$juridisk != "Alla") {
       df <- df %>% dplyr::filter(Branschgrupp == input$juridisk)
@@ -279,10 +279,10 @@ foretag_server <- function(input, output, session) {
     }
     df
   })
-  
+
   ## Tabelldata
   # tabell
-  
+
   ## Sammanställningstabell
   output$tabell <- renderDT({
     tabell_df <- data_filt() |>
@@ -304,7 +304,7 @@ foretag_server <- function(input, output, session) {
         Exportvolym = ExpStklText,
         Importvolym = ImpStklText
       )
-    
+
     datatable(
       tabell_df,
       rownames = FALSE,
@@ -499,19 +499,24 @@ foretag_server <- function(input, output, session) {
     )
     #paste(nrow(data_filt()), "matchande företag")
   }, server = TRUE)
-  
+
   ## Stapeldiagram
   output$stapel <- renderPlotly({
-    
-    tot_data <- dataset_df |>
-      dplyr::filter(Branschgrupp != "Övrigt") |>
+
+    .bas_df <- dataset_df
+    .filt_df <- data_filt()
+    if (isTRUE(filtrera_bort_ovrigt)) {
+      .bas_df  <- .bas_df  |> dplyr::filter(Branschgrupp != "Övrigt")
+      .filt_df <- .filt_df |> dplyr::filter(Branschgrupp != "Övrigt")
+    }
+
+    tot_data <- .bas_df |>
       dplyr::count(Branschgrupp, name = "n_total")
-    
-    stapel_filt <- data_filt() |>
-      dplyr::filter(Branschgrupp != "Övrigt") |>
+
+    stapel_filt <- .filt_df |>
       dplyr::count(Branschgrupp, name = "n_filt") |>
       dplyr::filter(n_filt > 0)
-    
+
     stapel_df <- dplyr::left_join(stapel_filt, tot_data, by = "Branschgrupp") |>
       dplyr::mutate(
         Branschgrupp = as.character(Branschgrupp),
@@ -522,7 +527,7 @@ foretag_server <- function(input, output, session) {
         )
       ) |>
       dplyr::arrange(n_filt)
-    
+
     if (nrow(stapel_df) == 0) {
       return(
         plotly::plot_ly() |>
@@ -554,13 +559,13 @@ foretag_server <- function(input, output, session) {
           )
       )
     }
-    
+
     max_x <- max(stapel_df$n_total, na.rm = TRUE)
-    
+
     if (!is.finite(max_x) || max_x == 0) {
       max_x <- 1
     }
-    
+
     etiketter <- lapply(seq_len(nrow(stapel_df)), function(i) {
       list(
         x = stapel_df$n_total[i],
@@ -579,7 +584,7 @@ foretag_server <- function(input, output, session) {
         )
       )
     })
-    
+
     plotly::plot_ly(
       data = stapel_df
     ) |>
@@ -610,7 +615,7 @@ foretag_server <- function(input, output, session) {
       ) |>
       plotly::layout(
         barmode = "overlay",
-        
+
         xaxis = list(
           title = list(
             text = "Antal företag",
@@ -629,7 +634,7 @@ foretag_server <- function(input, output, session) {
             color = "#00374e"
           )
         ),
-        
+
         yaxis = list(
           title = "",
           showticklabels = FALSE,
@@ -638,24 +643,24 @@ foretag_server <- function(input, output, session) {
           categoryorder = "array",
           categoryarray = stapel_df$Branschgrupp
         ),
-        
+
         annotations = etiketter,
-        
+
         margin = list(
           l = 0,
-          r = 190,
+          r = 120,
           t = 5,
           b = 45
         ),
-        
+
         paper_bgcolor = "rgba(0,0,0,0)",
         plot_bgcolor = "rgba(0,0,0,0)",
-        
+
         font = list(
           family = "Roboto, Arial, sans-serif",
           color = "#00374e"
         ),
-        
+
         dragmode = FALSE
       ) |>
       plotly::config(
@@ -667,7 +672,7 @@ foretag_server <- function(input, output, session) {
         showAxisDragHandles = FALSE
       )
   })
-  
+
   ## Kommunvalskarta
   # Joinar kommungeometrier med scb-data
   karta_data <- reactive({
@@ -676,7 +681,7 @@ foretag_server <- function(input, output, session) {
     } else {
       data_filt()
     }
-    
+
     df_counts <- base_df %>%
       group_by(Kommunkod) %>%
       summarise(antal = n(), .groups = "drop")
@@ -685,7 +690,7 @@ foretag_server <- function(input, output, session) {
         df_counts, by = c("kommunkod" = "Kommunkod")) %>%
       mutate(antal = replace_na(antal, 0))
   })
-  
+
   # Palett
   fargvektor_karta <- reactive({
     dmap <- karta_data()
@@ -707,21 +712,10 @@ foretag_server <- function(input, output, session) {
       # Passa in kartan på länets faktiska utbredning (tightare än fast zoom)
       fitBounds(bb[["xmin"]], bb[["ymin"]], bb[["xmax"]], bb[["ymax"]]) %>%
       # Ritningsordning
-      addMapPane("bgPane", zIndex = 405) %>%
       addMapPane("kommunerPane", zIndex = 410) %>%
       addMapPane("dimPane",  zIndex = 410) %>%
       addMapPane("selectedPane", zIndex = 410) %>%
-      
-      # Omkringliggande kommuner (gråa, icke-interaktiva)
-      addPolygons(
-        data = kommuner_bg,
-        fillColor = "#808080",
-        fillOpacity = 0.25,
-        color = "grey",
-        weight = 0.5,
-        group = "bg",
-        options = pathOptions(pane = "bgPane", interactive = FALSE)
-      ) %>%
+
       # Basfärgsättning. Ska göras dynamisk till aktivt filter
       addPolygons(
         data = karta_data(),
@@ -733,20 +727,26 @@ foretag_server <- function(input, output, session) {
         group = "kommuner",
         label = ~paste0(kommunnamn, ": ", antal, " företag"),
         options = pathOptions(pane = "kommunerPane")
+      ) %>%
+      # Tips-text
+      addControl(
+        html = "<div class='kart-tips-wrap'><svg class='kart-tips-arrow' width='64' height='54' viewBox='0 0 64 54' xmlns='http://www.w3.org/2000/svg'><path d='M58 48 C 30 50, 10 42, 8 8' fill='none' stroke='#00374e' stroke-width='2.2' stroke-linecap='round'/><path d='M8 8 L 6 22 M8 8 L 22 11' fill='none' stroke='#00374e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg><div class='kart-tips'>Tips!<br>Klicka för att se<br>en specifik kommun</div></div>",
+        position = "bottomright",
+        className = "kart-tips-control"
       )
   })
-  
+
   observeEvent(input$karta_kommun_shape_click, ignoreInit = TRUE, {
     clicked_id <- input$karta_kommun_shape_click$id
     current_id <- input$kommun
-    
+
     if (identical(clicked_id, current_id)) {
       updateSelectInput(session, "kommun", selected = "Alla")
     } else {
       updateSelectInput(session, "kommun", selected = clicked_id)
     }
   })
-  
+
   # inställningar för kartans interaktivitet
   observeEvent(list(karta_data(), input$kommun), ignoreInit = TRUE, {
     # Redraw base polygons with current filtered counts and palette
@@ -763,7 +763,7 @@ foretag_server <- function(input, output, session) {
         label = ~paste0(kommunnamn, ": ", antal, " företag"),
         options = pathOptions(pane = "kommunerPane")
       )
-    
+
     # Apply dimming + red highlight depending on selected municipality
     if (!is.null(input$kommun) && input$kommun != "Alla") {
       leafletProxy("karta_kommun") %>%
@@ -793,7 +793,7 @@ foretag_server <- function(input, output, session) {
         clearGroup("markerad")
     }
   })
-  
+
   ## Sidotabell
   output$sidTabell <- renderDT({
     data_filt() %>%
@@ -812,13 +812,13 @@ foretag_server <- function(input, output, session) {
   selection = "none",
   server = TRUE
   )
-  
+
   # Icke dynamiskt val av världsdelar att visa
   varldsdel_choices <- c("Afrika", "Asien", "Europa", "Nordamerika", "Sydamerika")
-  
+
   liten_karta_data <- reactive({
     df <- data_filt()
-    
+
     # Joinar geometrier mot datatabell
     result <- varlden_sf %>%
       dplyr::left_join(
@@ -838,18 +838,18 @@ foretag_server <- function(input, output, session) {
       ) %>%
       tidyr::replace_na(list(exportforetag = 0, importforetag = 0))
     result
-    
+
   })
-  
+
   observeEvent(input$resetKommunOutside, ignoreInit = TRUE, {
     updateSelectizeInput(session, "kommun", selected = "Alla")
   })
-  
+
   # Byter text till "Matchande företag x med export från" vid aktivt filter
   any_filter_active <- reactive({
     any(c(input$exportRegion, input$importRegion) != "Alla", na.rm = TRUE)
   })
-  
+
   # Paletter
   fargvektor_liten_export <- reactive({
     d <- liten_karta_data()
@@ -867,15 +867,15 @@ foretag_server <- function(input, output, session) {
     if (!is.finite(dom[1]) || !is.finite(dom[2])) dom <- range(d$importforetag, na.rm = TRUE)
     colorNumeric(palette = "Reds", domain = dom, na.color = "transparent")
   })
-  
+
   ## Exportkarta
   output$exportKarta <- renderLeaflet({
     d <- liten_karta_data()
-    
+
     # Endast exportRegion påverkar exportkarta
     is_selected <- if (!is.null(input$exportRegion) && input$exportRegion != "Alla") d$varldsdel == input$exportRegion else rep(TRUE, nrow(d))
     label_prefix <- if (any_filter_active()) "matchande företag med export till " else "företag med export till "
-    
+
     leaflet(d,
             options = leafletOptions(
               zoomControl = FALSE, dragging = FALSE, scrollWheelZoom = FALSE,
@@ -896,15 +896,15 @@ foretag_server <- function(input, output, session) {
         label = ~paste0(exportforetag, " ", label_prefix, varldsdel)
       )
   })
-  
+
   ## Importkarta
   output$importKarta <- renderLeaflet({
     d <- liten_karta_data()
-    
+
     # Endast importRegion påverkar importKarta
     is_selected <- if (!is.null(input$importRegion) && input$importRegion != "Alla") d$varldsdel == input$importRegion else rep(TRUE, nrow(d))
     label_prefix <- if (any_filter_active()) "matchande företag med import från " else "företag med import från "
-    
+
     leaflet(d,
             options = leafletOptions(
               zoomControl = FALSE, dragging = FALSE, scrollWheelZoom = FALSE,
@@ -926,7 +926,7 @@ foretag_server <- function(input, output, session) {
         options = pathOptions(pane = "exportBasePane")
       )
   })
-  
+
   ## Bearbetning nedladdad excel
   export_df <- reactive({
     df <- data_filt()
@@ -939,21 +939,21 @@ foretag_server <- function(input, output, session) {
         Kluster, `Huvudsaklig bransch`, Branschgrupp, Bolagsform
       )
   })
-  
+
   ## Nedladdningsfunktion: filtrerad data
   output$downloadFilter <- downloadHandler(
     filename = function() {
       stamp <- format(Sys.time(), "%Y-%m-%d_%H%M")
       paste0("foretagsstatistik_filtrerad_", stamp, ".xlsx")
     },
-    
+
     content = function(dl) {
       df <- export_df()
-      
+
       wb <- openxlsx::createWorkbook()
-      
+
       openxlsx::addWorksheet(wb, "Data")
-      
+
       header_style <- openxlsx::createStyle(
         fgFill = "#00374e",
         fontColour = "#FFFFFF",
@@ -961,34 +961,34 @@ foretag_server <- function(input, output, session) {
         border = "bottom",
         borderColour = "#f3e8d9"
       )
-      
+
       openxlsx::writeData(
         wb,
         sheet = "Data",
         x = df,
         headerStyle = header_style
       )
-      
+
       openxlsx::setColWidths(
         wb,
         sheet = "Data",
         cols = seq_len(ncol(df)),
         widths = "auto"
       )
-      
+
       openxlsx::addFilter(
         wb,
         sheet = "Data",
         row = 1,
         cols = seq_len(ncol(df))
       )
-      
+
       openxlsx::freezePane(
         wb,
         sheet = "Data",
         firstActiveRow = 2
       )
-      
+
       openxlsx::saveWorkbook(
         wb,
         file = dl,
@@ -996,22 +996,22 @@ foretag_server <- function(input, output, session) {
       )
     }
   )
-  
-  
+
+
   ## Nedladdningsfunktion: all data
   output$downloadAll <- downloadHandler(
     filename = function() {
       stamp <- format(Sys.time(), "%Y-%m-%d_%H%M")
       paste0("foretagsstatistik_all_data_", stamp, ".xlsx")
     },
-    
+
     content = function(dlAll) {
       df <- dataset_df
-      
+
       wb <- openxlsx::createWorkbook()
-      
+
       openxlsx::addWorksheet(wb, "Data")
-      
+
       header_style <- openxlsx::createStyle(
         fgFill = "#00374e",
         fontColour = "#FFFFFF",
@@ -1019,34 +1019,34 @@ foretag_server <- function(input, output, session) {
         border = "bottom",
         borderColour = "#f3e8d9"
       )
-      
+
       openxlsx::writeData(
         wb,
         sheet = "Data",
         x = df,
         headerStyle = header_style
       )
-      
+
       openxlsx::setColWidths(
         wb,
         sheet = "Data",
         cols = seq_len(ncol(df)),
         widths = "auto"
       )
-      
+
       openxlsx::addFilter(
         wb,
         sheet = "Data",
         row = 1,
         cols = seq_len(ncol(df))
       )
-      
+
       openxlsx::freezePane(
         wb,
         sheet = "Data",
         firstActiveRow = 2
       )
-      
+
       openxlsx::saveWorkbook(
         wb,
         file = dlAll,
@@ -1054,5 +1054,5 @@ foretag_server <- function(input, output, session) {
       )
     }
   )
-  
+
 }
