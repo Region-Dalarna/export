@@ -148,8 +148,15 @@ foretag_ui <- fluidPage(
       h4("Kommuner"),
 
       fluidRow(
-        leafletOutput("karta_kommun"),
-        style = "height: 500px;"
+        style = "height: 500px;",
+        tags$div(
+          style = "position: relative; height: 100%;",
+          leafletOutput("karta_kommun", height = "500px"),
+          tags$div(
+            class = "kart-tips-overlay kart-tips-dalarna",
+            HTML("<svg class='kart-tips-arrow' width='70' height='60' viewBox='0 0 70 60' xmlns='http://www.w3.org/2000/svg'><path d='M9 54 C 17 30, 36 18, 57 13' fill='none' stroke='#00374e' stroke-width='2.4' stroke-linecap='round'/><polygon points='66,11 59,20 55,6' fill='#00374e'/></svg><div class='kart-tips'>Tips!<br>Klicka för att se<br>en specifik kommun</div>")
+          )
+        )
       )
     ),
 

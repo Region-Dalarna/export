@@ -115,6 +115,11 @@ handel_server <- function(input, output, session) {
   # Vald regionkod ("00" = Riket/Alla när inget län är valt)
   valt_regionkod <- reactive(if (is.null(rv$sel_regionkod)) RIKET else rv$sel_regionkod)
 
+  # Geo-text för rubriker: versal form ("Hela Sverige") resp. gemen,
+  # löpande form ("hela Sverige") när den står mitt i en mening.
+  geo_versal <- reactive(if (is.null(rv$sel_region)) "Hela Sverige" else rv$sel_region)
+  geo_lopande <- reactive(if (is.null(rv$sel_region)) "hela Sverige" else rv$sel_region)
+
   mergedData <- reactive({
     lan_sf %>%
       left_join(karta_data_bas, by = "lanskod") %>%
@@ -164,11 +169,6 @@ handel_server <- function(input, output, session) {
         layerId = ~lanskod,
         group = "lan",
         options = pathOptions(pane = "lanPane")
-      ) %>%
-      addControl(
-        html = "<div class='kart-tips-wrap'><svg class='kart-tips-arrow' width='64' height='54' viewBox='0 0 64 54' xmlns='http://www.w3.org/2000/svg'><path d='M58 48 C 30 50, 10 42, 8 8' fill='none' stroke='#00374e' stroke-width='2.2' stroke-linecap='round'/><path d='M8 8 L 6 22 M8 8 L 22 11' fill='none' stroke='#00374e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg><div class='kart-tips'>Tips!<br>Klicka för att se<br>ett specifikt län</div></div>",
-        position = "bottomright",
-        className = "kart-tips-control"
       )
   })
 
@@ -215,7 +215,7 @@ handel_server <- function(input, output, session) {
   })
 
   output$lanText <- renderText({
-    if (is.null(rv$sel_region)) "Hela Sverige" else rv$sel_region
+    paste0(geo_versal(), " år ", maxYear)
   })
 
   # Statiska texter
@@ -282,18 +282,12 @@ handel_server <- function(input, output, session) {
         labels = c(Export = "Export", Import = "Import")
       ) +
       scale_y_continuous(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) +
-      scale_x_continuous(breaks = c(2000, 2010, 2020),
-                         labels = c(2000, 2010, 2020)
-      ) +
+      scale_x_continuous(breaks = sort(unique(c(2000, 2010, 2020, maxYear)))) +
       labs(
         x = NULL,
         y = "Volym (mdkr)",
         color = NULL,
-        title = if (is.null(rv$sel_region)) {
-          "Utveckling över tid - Hela Sverige"
-        } else {
-          paste0("Utveckling över tid - ", rv$sel_region)
-        }
+        title = paste0("Utveckling över tid i ", geo_lopande(), " år ", maxYear)
       ) +
       theme_minimal(base_size=12) +
       theme(
@@ -324,6 +318,7 @@ handel_server <- function(input, output, session) {
       layout(
         dragmode = FALSE,
         hovermode = "x unified",
+        margin = list(l = 80, r = 10, t = 45, b = 30),
         xaxis = list(
           showspikes = TRUE, spikemode = "across", spikesnap = "data",
           hoverformat = ".0f"
@@ -382,10 +377,7 @@ handel_server <- function(input, output, session) {
       scale_x_continuous(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) +
       labs(
         x = NULL, y = NULL,
-        title = paste0(
-          "Produktgrupper ", maxYear, " - ",
-          ifelse(is.null(rv$sel_region), "Hela Sverige", rv$sel_region)
-        )
+        title = paste0("Produktgrupper i ", geo_lopande(), " år ", maxYear)
       ) +
       theme_minimal(base_size = 12) +
       theme(
@@ -414,7 +406,10 @@ handel_server <- function(input, output, session) {
       plotly::layout(
         dragmode = FALSE,
         hovermode = "y unified",
+        margin = list(l = 210, r = 20, t = 55, b = 45),
         xaxis = list(
+          title = list(text = "mdkr",
+                       font = list(family = "Fieldwork Geo Demibold, Arial, sans-serif", size = 12, color = "#00374e")),
           showspikes = FALSE,
           hoverformat = ".0f"
         ),
@@ -511,8 +506,12 @@ handel_server <- function(input, output, session) {
                      editable = FALSE, showAxisDragHandles = FALSE)
   })
 
-  output$importText <- renderText({ "Varifrån kommer importen"})
+  output$importText <- renderText({
+    paste0("Varifrån kommer importen till ", geo_lopande(), " år ", maxYear)
+  })
 
-  output$exportText <- renderText({ "Var går exporten"})
+  output$exportText <- renderText({
+    paste0("Var går exporten från ", geo_lopande(), " år ", maxYear)
+  })
 
 }

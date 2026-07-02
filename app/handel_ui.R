@@ -49,9 +49,10 @@ handel_ui <- fluidPage(
         .js-plotly-plot .plotly .cursor-crosshair { cursor: default !important; }
            "))
   ),
+  # Rad 1: karta + summering
   fluidRow(
     column(
-      width = 4,
+      width = 6,
       fluidRow(
         column(12,  textOutput("lanText"), style = "margin-bottom: 4px;")
       ),
@@ -71,36 +72,59 @@ handel_ui <- fluidPage(
       fluidRow(
         column(6, textOutput("exportPercText"), align = "center"),
         column(6, textOutput("netBalansText"), align = "center")
-        ),
+      ),
       fluidRow(
         column(6, textOutput("brodtext3"), align = "center"),
         column(6, textOutput("brodtext4"), align = "center")
-      ),
-      fluidRow(
-        leafletOutput("lansKarta", height = "800px")
       )
     ),
     column(
-      width = 4,
-      br(),
+      width = 6,
+      fluidRow(
+        style = "height: 700px;",
+        tags$div(
+          style = "position: relative; height: 100%; max-width: 480px; margin: 0 auto;",
+          leafletOutput("lansKarta", height = "700px"),
+          tags$div(
+            class = "kart-tips-overlay kart-tips-sverige",
+            HTML("<div class='kart-tips'>Tips!<br>Klicka för att se<br>ett specifikt län</div><svg class='kart-tips-arrow' width='70' height='66' viewBox='0 0 70 66' xmlns='http://www.w3.org/2000/svg'><path d='M61 12 C 53 36, 34 48, 13 53' fill='none' stroke='#00374e' stroke-width='2.4' stroke-linecap='round'/><polygon points='4,55 11,46 15,60' fill='#00374e'/></svg>")
+          )
+        )
+      )
+    )
+  ),
+
+  br(),
+
+  # Rad 2: utveckling över tid + produktgrupper
+  fluidRow(
+    column(
+      width = 6,
       fluidRow(
         column(
           width = 12,
           plotlyOutput("year_graph", height = "300px")
         )
-      ),
-      br(),
+      )
+    ),
+    column(
+      width = 6,
       fluidRow(
         column(
           width = 12,
           plotlyOutput("bar_graph", height = "700px")
         )
       )
-    ),
+    )
+  ),
+
+  br(),
+
+  # Rad 3: varifrån kommer importen + var går exporten
+  fluidRow(
     column(
-      width = 4,
+      width = 6,
       fluidRow(
-        br(),
         column(
           width = 12,
           textOutput("importText")
@@ -111,8 +135,10 @@ handel_ui <- fluidPage(
           width = 12,
           plotlyOutput("importStapel", height = "350px")
         )
-      ),
-      br(),
+      )
+    ),
+    column(
+      width = 6,
       fluidRow(
         column(
           width = 12,

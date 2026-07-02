@@ -289,15 +289,13 @@ foretag_server <- function(input, output, session) {
       dplyr::arrange(dplyr::desc(stkl_num)) |>
       dplyr::select(
         Företagsnamn,
-        Postnummer,
         Kommun,
-        Storleksklass,
         Omsättningsklass,
-        "Huvudsaklig bransch",
+        Storleksklass,
         Branschgrupp,
+        "Huvudsaklig bransch",
         ExpStklText,
         ImpStklText,
-        Kluster,
         Bolagsform
       ) |>
       dplyr::rename(
@@ -325,10 +323,10 @@ foretag_server <- function(input, output, session) {
         columnDefs = list(
           list(
             width = '50px',
-            targets = c(1:4,9)),
+            targets = c(1,3)),
           list(
             width = '100px',
-            targets = c(0,5:8,10))),
+            targets = c(0,2,4,5,6,7,8))),
         initComplete = JS("
           function(settings, json) {
             var api = this.api();                            // API-instans för tabellen
@@ -727,12 +725,6 @@ foretag_server <- function(input, output, session) {
         group = "kommuner",
         label = ~paste0(kommunnamn, ": ", antal, " företag"),
         options = pathOptions(pane = "kommunerPane")
-      ) %>%
-      # Tips-text
-      addControl(
-        html = "<div class='kart-tips-wrap'><svg class='kart-tips-arrow' width='64' height='54' viewBox='0 0 64 54' xmlns='http://www.w3.org/2000/svg'><path d='M58 48 C 30 50, 10 42, 8 8' fill='none' stroke='#00374e' stroke-width='2.2' stroke-linecap='round'/><path d='M8 8 L 6 22 M8 8 L 22 11' fill='none' stroke='#00374e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg><div class='kart-tips'>Tips!<br>Klicka för att se<br>en specifik kommun</div></div>",
-        position = "bottomright",
-        className = "kart-tips-control"
       )
   })
 

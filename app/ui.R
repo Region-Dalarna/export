@@ -15,5 +15,5 @@ navbarPage(
   ),
 
   tabPanel("Företagsstatistik", foretag_ui),
-  tabPanel("Handel",            handel_ui)
+  tabPanel("Export",            handel_ui)
 )
