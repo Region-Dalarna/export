@@ -56,3 +56,7 @@ jobs:
             sudo systemctl restart shiny-server && echo "Shiny Server omstartad."
           fi
 
+      - name: Regenerera landningssida
+        run: |
+          sudo /usr/local/bin/generera_landningssida.sh || echo "Varning: kunde inte regenerera landningssidan (ej kritiskt fel)"
+
