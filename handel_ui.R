@@ -85,7 +85,8 @@ handel_ui <- fluidPage(
           fluidRow(
             column(
               width = 12,
-              plotlyOutput("year_graph", height = "300px")
+              h4(textOutput("yearGraphTitle")),
+              plotlyOutput("year_graph", height = "280px")
             )
           )
         )
@@ -94,18 +95,19 @@ handel_ui <- fluidPage(
 
     # Mittenkolumn: produktgrupper
     column(
-      width = 4,
+      width = 5,
       fluidRow(
         column(
           width = 12,
-          plotlyOutput("bar_graph", height = "700px")
+          h4(textOutput("barGraphTitle")),
+          plotlyOutput("bar_graph", height = "670px")
         )
       )
     ),
 
     # Högerkolumn: länskarta
     column(
-      width = 4,
+      width = 3,
       fluidRow(
         style = "height: 700px;",
         tags$div(

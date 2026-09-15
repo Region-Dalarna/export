@@ -289,8 +289,7 @@ handel_server <- function(input, output, session) {
       labs(
         x = NULL,
         y = "Volym (mdkr)",
-        color = NULL,
-        title = paste0("Utveckling över tid i ", geo_lopande(), " år ", maxYear)
+        color = NULL
       ) +
       theme_minimal(base_size=12) +
       theme(
@@ -301,14 +300,6 @@ handel_server <- function(input, output, session) {
           size = 14,
           color = "#00374e"
         ),
-        plot.title = element_text(
-          face = "bold",
-          family = "Fieldwork Geo Demibold",
-          size = 16,
-          color = "#00374e",
-          hjust = 0,
-          margin = margin(b = 6)
-        ),
         panel.grid.minor = element_blank(),
         panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_line(
@@ -317,11 +308,12 @@ handel_server <- function(input, output, session) {
           linetype = "dotted"
         )
       )
+
     gp <- plotly::ggplotly(p, tooltip = NULL) %>%
       layout(
         dragmode = FALSE,
         hovermode = "x unified",
-        margin = list(l = 80, r = 10, t = 45, b = 30),
+        margin = list(l = 80, r = 10, t = 20, b = 30),
         xaxis = list(
           showspikes = TRUE, spikemode = "across", spikesnap = "data",
           hoverformat = ".0f"
@@ -378,22 +370,10 @@ handel_server <- function(input, output, session) {
         labels = c(Export = "Export", Import = "Import")
       ) +
       scale_x_continuous(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) +
-      labs(
-        x = NULL, y = NULL,
-        title = paste0("Produktgrupper i ", geo_lopande(), " år ", maxYear)
-      ) +
+      labs(x = NULL, y = NULL) +
       theme_minimal(base_size = 12) +
       theme(
         text = element_text(family = "Roboto"),
-        plot.title = element_text(
-          face = "bold",
-          family = "Fieldwork Geo Demibold",
-          size = 14,
-          color = "#00374e",
-          hjust = 0,
-          margin = margin(b = 6)
-        ),
-        plot.title.position = "plot",
         legend.position = "right",
         panel.grid.minor = element_blank(),
         panel.grid.major.y = element_blank(),
@@ -412,7 +392,7 @@ handel_server <- function(input, output, session) {
         # (två staplar per branschgrupp) - "closest" visar bara den stapel
         # muspekaren faktiskt är på.
         hovermode = "closest",
-        margin = list(l = 210, r = 10, t = 60, b = 45),
+        margin = list(l = 210, r = 10, t = 20, b = 45),
         xaxis = list(
           title = list(text = "mdkr",
                        font = list(family = "Fieldwork Geo Demibold, Arial, sans-serif", size = 12, color = "#00374e")),
@@ -527,6 +507,14 @@ handel_server <- function(input, output, session) {
 
   output$exportText <- renderText({
     paste0("Var går exporten från ", geo_lopande(), " år ", maxYear)
+  })
+
+  output$yearGraphTitle <- renderText({
+    paste0("Utveckling över tid i ", geo_lopande(), " år ", maxYear)
+  })
+
+  output$barGraphTitle <- renderText({
+    paste0("Produktgrupper i ", geo_lopande(), " år ", maxYear)
   })
 
 }
