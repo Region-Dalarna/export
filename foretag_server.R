@@ -41,8 +41,8 @@ system.time({
 
 system.time({
   con_geo <- shiny_uppkoppling_las("geodata")
-  karta <- st_read(con_geo, layer = Id(schema = "karta", table = "varldsdelar"))
-  kommuner_db <- st_read(con_geo, layer = Id(schema = "karta", table = "kommun_scb"))
+  karta <- st_read(con_geo, layer = DBI::Id(schema = "karta", table = "varldsdelar"))
+  kommuner_db <- st_read(con_geo, layer = DBI::Id(schema = "karta", table = "kommun_scb"))
   #karta <- st_read("C:/Users/SE1C3T/Documents/Uppdrag/Dalarna/Arbetsmapp/main/dev/data/varldsdelar.gpkg")
   #RegSO <- st_read("C:/Users/SE1C3T/Documents/Uppdrag/Dalarna/Arbetsmapp/main/dev/data/RegSO_2025.gpkg")
   DBI::dbDisconnect(con_geo)
