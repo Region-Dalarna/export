@@ -197,6 +197,10 @@ foretag_server <- function(input, output, session) {
                       choices = c("Alla", sort(unique(trimws(dataset_df$Branschgrupp)))),
                       selected = "Alla")
 
+    updateSelectInput(session, "bolagsform",
+                      choices = c("Alla", sort(unique(trimws(dataset_df$Bolagsform)))),
+                      selected = "Alla")
+
     updateSelectInput(session, "anstallda",
                       choices = c("Alla", levels(dataset_df$Storleksklass)),
                       selected = "Alla")
@@ -205,8 +209,7 @@ foretag_server <- function(input, output, session) {
                          choices = c("Alla" = "Alla", setNames(
                            unique(trimws(dataset_df$Kommunkod)),
                            unique(trimws(dataset_df$Kommun)))),
-                         selected = "Alla",
-                         server = TRUE)
+                         selected = "Alla")
 
     updateSelectInput(session, "exportVolym",
                       choices = c("Alla" = "Alla", levels(dataset_df$ExpStklText)),
@@ -227,7 +230,7 @@ foretag_server <- function(input, output, session) {
 
   # Filtrera företagsdata
   data_filt <- reactive({
-    req(input$juridisk, input$anstallda)
+    req(input$juridisk, input$anstallda, input$bolagsform)
     df <- dataset_df
 
     if (!is.null(input$kommun) && input$kommun != "Alla") {
@@ -235,6 +238,9 @@ foretag_server <- function(input, output, session) {
     }
     if (input$juridisk != "Alla") {
       df <- df %>% dplyr::filter(Branschgrupp == input$juridisk)
+    }
+    if (input$bolagsform != "Alla") {
+      df <- df %>% dplyr::filter(Bolagsform == input$bolagsform)
     }
     if (input$anstallda != "Alla") {
       df <- df %>% dplyr::filter(Storleksklass == input$anstallda)
@@ -255,12 +261,15 @@ foretag_server <- function(input, output, session) {
   })
 
   data_filt_no_kommun <- reactive({
-    req(input$juridisk, input$anstallda)
+    req(input$juridisk, input$anstallda, input$bolagsform)
     df <- dataset_df
 
     # DO NOT apply the kommun filter here
     if (input$juridisk != "Alla") {
       df <- df %>% dplyr::filter(Branschgrupp == input$juridisk)
+    }
+    if (input$bolagsform != "Alla") {
+      df <- df %>% dplyr::filter(Bolagsform == input$bolagsform)
     }
     if (input$anstallda != "Alla") {
       df <- df %>% dplyr::filter(Storleksklass == input$anstallda)
@@ -326,173 +335,7 @@ foretag_server <- function(input, output, session) {
             targets = c(1,3)),
           list(
             width = '100px',
-            targets = c(0,2,4,5,6,7,8))),
-        initComplete = JS("
-          function(settings, json) {
-            var api = this.api();                            // API-instans för tabellen
-            var tableId = settings.sTableId;
-
-            function escRegex(s){
-              return String(s).replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&'); }
-            function closeAll(){
-              $('.dt-filter-pop[data-table=\"' + tableId + '\"]').remove(); }
-
-            function positionPop($trigger, $pop) {                // Placerar popup under event
-              var rect = $trigger[0].getBoundingClientRect();     // Triggers position relativt till viewport
-              var top  = window.scrollY + rect.bottom + 4;        // Beräknar absolut-höjd
-              var left = window.scrollX + rect.left;
-              $pop.css({ top: top + 'px', left: left + 'px' });   // Applicerar CSS-position till popup
-            }
-
-            // Wrap header text med klickbart spann
-            api.columns().every(function(){                  // Itererar alla kolumner
-              var $h = $(this.header());                     // jQuery av kolumners header
-              if (!$h.find('.dt-header-text').length) {
-                var txt = $h.text();
-                $h.empty().append($('<span class=\"dt-header-text\"></span>').text(txt));
-              }
-            });
-
-            // Stäng på interaktioner utanför
-            $(document).on('click.dtfilters-' + tableId, function(e){           // Global klick handler namngett per tabell
-              if ($(e.target).closest('.dt-filter-pop').length) return;         // Ignorera klick inuti popup
-              closeAll();                                                       // Else stäng öppna popup
-            });
-
-            // Stäng på scroll utanför popup
-            $(window).on('scroll.dtfilters-' + tableId + ' resize.dtfilters-' + tableId, function(){ closeAll(); });
-            $(api.table().container()).on('scroll.dtfilters-' + tableId, function(){ closeAll(); });
-
-            api.columns().every(function(colIdx){            // Filter UI per kolumn
-              var column = this;                             // Kolumn-API
-              var $header = $(column.header());              // Header
-              var headerText = $header.text().trim();        // Header text för labels/keys
-              var colKey = headerText;                       // Default kolumn-key = header text
-              var keyMap = {                                 // Valfri mapping från header labels till backend keys
-                'Exportvolym': 'ExpStklText',
-                'Importvolym': 'ImpStklText',
-                'Huvudsaklig bransch': 'Huvudsaklig bransch',
-                'Branschgrupp': 'Branschgrupp',
-                'Företagsnamn': 'Företagsnamn',
-                'Postnummer': 'Postnummer',
-                'Kommun': 'Kommun',
-                'Storleksklass': 'Storleksklass',
-                'Omsättningsklass': 'Omsättningsklass',
-                'Bolagsform': 'Bolagsform',
-                'Kluster': 'Kluster'
-              };
-              if (keyMap[headerText]) colKey = keyMap[headerText];
-              var $trigger = $header.find('.dt-header-text');                   // Klickbara ytan i headern
-
-              $trigger.off('click').on('click', function(ev){                   // Klick handler för att öppna popup
-                ev.stopPropagation(); // don't sort when opening filter         // Förhindra header klick från att trigga sortering
-                closeAll();
-
-                // Få unika värden från klientsidsdata
-                var uniq = column.data().unique().toArray()
-                  .filter(function(v){ return v !== null && v !== undefined && v !== ''; });   // Filtrerar null/tomma
-
-                if (colKey === 'Huvudsaklig bransch') {
-                  // Punkt 4: sortera på storlek (antal företag), fallande
-                  var __counts = {};
-                  column.data().toArray().forEach(function(v){
-                    if (v !== null && v !== undefined && v !== '') __counts[v] = (__counts[v] || 0) + 1;
-                  });
-                  uniq.sort(function(a,b){
-                    var d = (__counts[b] || 0) - (__counts[a] || 0);
-                    return d !== 0 ? d : (''+a).localeCompare(''+b);
-                  });
-                } else {
-                  uniq.sort(function(a,b){
-                    var an = parseFloat(a), bn = parseFloat(b);
-                    if(!isNaN(an) && !isNaN(bn)) return an - bn;
-                    return (''+a).localeCompare(''+b);
-                  });
-                }
-
-                var popId = 'dt-pop-' + tableId + '-' + colIdx;
-                var $pop = $('<div class=\"dt-filter-pop\" id=\"' + popId + '\" data-table=\"' + tableId + '\"></div>');
-                var $title = $('<div class=\"title\"></div>').text('Filter: ' + $header.text());
-
-                // Multival för värden
-                var $select = $('<select multiple class=\"dt-filter-select\"></select>');
-                $select.append($('<option value=\"__ALL__\" selected>Alla</option>'));                   //Default =Alla
-                uniq.forEach(function(v){ $select.append($('<option>').attr('value', v).text(v)); });   // Lägg till unika värden
-
-                var toggleId = 'excl_' + popId;                 // Unika värden för exkludering
-                var $toggle = $('<div class=\"form-check mt-2\"></div>')
-                  .append($('<input type=\"checkbox\" class=\"form-check-input\" id=\"' + toggleId + '\">'))
-                  .append($('<label class=\"form-check-label\" for=\"' + toggleId + '\">Exkludera val</label>'));
-
-                var $actions = $('<div class=\"dt-filter-actions\"></div>')
-                  .append($('<button type=\"button\" class=\"btn btn-sm btn-secondary\">Rensa</button>').on('click', function(){
-                      column.search('', true, false).draw();
-                      if (window.Shiny) {                          // Säger till servern att filtret är rensat
-                        Shiny.setInputValue(tableId + '_filter', {
-                          table: tableId,
-                          colIdx: colIdx,
-                          colHeader: headerText,
-                          colKey: colKey,
-                          values: null,         // null => rensar den här kolumnens app-wide filter
-                          exclude: false
-                        }, {priority: 'event'});
-                      }
-                      closeAll();
-                  }))
-
-                  .append($('<button type=\"button\" class=\"btn btn-sm btn-primary\">Använd</button>').on('click', function(){
-                    var vals = $select.val() || [];
-                    var exclude = $toggle.find('input').is(':checked');         //Kollar efter exkluderings-check
-                    if (vals.length === 0 || vals.indexOf('__ALL__') !== -1) {      //Om inget eller Alla är valt
-                      column.search('', true, false).draw(); closeAll(); return;    //Rensa filter och stäng
-                    }
-                    var pattern = vals.map(function(v){ return '^' + escRegex(v) + '$'; }).join('|');   //Bygg regex för valda värden
-                    if (exclude) {
-                      column.search('^(?!(' + pattern + ')).*$', true, false).draw();   //Negativ lookahead för att exkludera värden
-                    } else {
-                      column.search('(' + pattern + ')', true, false).draw();   //Matchra valda värden
-                    }
-                    closeAll();
-                  }));
-
-                $pop.append($title).append($select).append($toggle).append($actions);   //Bygger popup
-                $('body').append($pop);
-                positionPop($trigger, $pop);        // Placera relativt till header
-
-                var $container = $(api.table().container());
-                var reposition = function(){ positionPop($trigger, $pop); };    //Byter plats vid resize
-                $container.on('scroll.' + popId, reposition);
-                $(window).on('resize.' + popId, reposition);      // Byter plats vid fönster resize
-                $pop.on('remove', function(){     //Cleanup handlers när popup är borta
-                  $container.off('scroll.' + popId, reposition);
-                  $(window).off('resize.' + popId, reposition);
-                });
-
-                // Initiera sök
-                $select.select2({
-                  dropdownParent: $pop,     // Håll dropdown inuti popup
-                  width: '100%',
-                  placeholder: 'Sök och välj...',
-                  closeOnSelect: false,
-                  allowClear: true,
-                  language: 'sv'
-                });
-
-                // Hantera 'Alla' vs specifika val
-                $select.on('change', function(){
-                  var cur = $select.val() || [];      // Nuvarande val
-                  if (cur.length > 1 && cur.indexOf('__ALL__') !== -1) {
-                    // Tar bort Alla om andra väljs
-                    $select.val(cur.filter(function(v){ return v !== '__ALL__'; })).trigger('change.select2');
-                  } else if (cur.length === 0) {
-                    // reset till Alla när inget är valt
-                    $select.val(['__ALL__']).trigger('change.select2');
-                  }
-                });
-              });
-            });
-          }
-        ")
+            targets = c(0,2,4,5,6,7,8)))
       )
     )
     #paste(nrow(data_filt()), "matchande företag")
@@ -509,24 +352,62 @@ foretag_server <- function(input, output, session) {
     }
 
     tot_data <- .bas_df |>
-      dplyr::count(Branschgrupp, name = "n_total")
+      dplyr::count(Branschgrupp, name = "n_total") |>
+      dplyr::mutate(Branschgrupp = as.character(Branschgrupp)) |>
+      dplyr::arrange(n_total)
+
+    # Punkt: när en specifik branschgrupp är vald ska övriga staplar tonas ner
+    # kraftigt så den valda branschgruppen syns tydligt.
+    sel_branschgrupp <- if (!is.null(input$juridisk) && input$juridisk != "Alla") {
+      input$juridisk
+    } else {
+      NA_character_
+    }
+    tot_data <- tot_data |>
+      dplyr::mutate(
+        tot_opacity = if (!is.na(sel_branschgrupp)) {
+          ifelse(Branschgrupp == sel_branschgrupp, 0.25, 0.06)
+        } else {
+          0.25
+        }
+      )
+
+    # Punkt 6: "Totalt"-staplarna byggs alltid från ALLA branschgrupper (oavsett
+    # vald branschgrupp/kommun-filter). Det gör att y-axeln alltid har samma
+    # antal kategoriplatser, så varje stapel får samma tjocklek - även när bara
+    # en branschgrupp matchar filtret.
+    full_cat_order <- tot_data$Branschgrupp
+
+    # Punkt 5: tydligare hovertext, särskilt vid kommunfilter
+    kommun_vald <- !is.null(input$kommun) && input$kommun != "Alla"
+    kommun_namn <- if (kommun_vald) {
+      kommuner_sf$kommunnamn[kommuner_sf$kommunkod == input$kommun][1]
+    } else {
+      NA_character_
+    }
 
     stapel_filt <- .filt_df |>
       dplyr::count(Branschgrupp, name = "n_filt") |>
-      dplyr::filter(n_filt > 0)
+      dplyr::mutate(Branschgrupp = as.character(Branschgrupp))
 
-    stapel_df <- dplyr::left_join(stapel_filt, tot_data, by = "Branschgrupp") |>
+    stapel_df <- dplyr::left_join(tot_data, stapel_filt, by = "Branschgrupp") |>
       dplyr::mutate(
-        Branschgrupp = as.character(Branschgrupp),
-        tooltip = paste0(
-          "Branschgrupp: ", Branschgrupp,
-          "<br>Antal matchningar: ", n_filt,
-          " av ", n_total, " företag"
-        )
-      ) |>
-      dplyr::arrange(n_filt)
+        n_filt = tidyr::replace_na(n_filt, 0),
+        tooltip = if (kommun_vald && !is.na(kommun_namn)) {
+          paste0(
+            "<b>", Branschgrupp, "</b><br>",
+            n_filt, " företag i ", kommun_namn,
+            " av ", n_total, " företag i hela Dalarna"
+          )
+        } else {
+          paste0(
+            "<b>", Branschgrupp, "</b><br>",
+            n_filt, " av ", n_total, " företag i hela Dalarna"
+          )
+        }
+      )
 
-    if (nrow(stapel_df) == 0) {
+    if (nrow(tot_data) == 0 || sum(stapel_df$n_filt) == 0) {
       return(
         plotly::plot_ly() |>
           plotly::layout(
@@ -558,23 +439,25 @@ foretag_server <- function(input, output, session) {
       )
     }
 
-    max_x <- max(stapel_df$n_total, na.rm = TRUE)
+    max_x <- max(tot_data$n_total, na.rm = TRUE)
 
     if (!is.finite(max_x) || max_x == 0) {
       max_x <- 1
     }
 
-    etiketter <- lapply(seq_len(nrow(stapel_df)), function(i) {
+    etiketter <- lapply(seq_len(nrow(tot_data)), function(i) {
+      is_sel <- is.na(sel_branschgrupp) || tot_data$Branschgrupp[i] == sel_branschgrupp
       list(
-        x = stapel_df$n_total[i],
-        y = stapel_df$Branschgrupp[i],
-        text = stapel_df$Branschgrupp[i],
+        x = tot_data$n_total[i],
+        y = tot_data$Branschgrupp[i],
+        text = tot_data$Branschgrupp[i],
         xref = "x",
         yref = "y",
         showarrow = FALSE,
         xanchor = "left",
         yanchor = "middle",
         xshift = 8,
+        opacity = if (is_sel) 1 else 0.35,
         font = list(
           family = "Roboto, Arial, sans-serif",
           size = 11,
@@ -583,22 +466,24 @@ foretag_server <- function(input, output, session) {
       )
     })
 
-    plotly::plot_ly(
-      data = stapel_df
-    ) |>
+    stapel_filt_df <- stapel_df |> dplyr::filter(n_filt > 0)
+
+    plotly::plot_ly() |>
       plotly::add_bars(
+        data = tot_data,
         x = ~n_total,
         y = ~Branschgrupp,
         orientation = "h",
         marker = list(
           color = "#00374e",
-          opacity = 0.25
+          opacity = tot_data$tot_opacity
         ),
         hoverinfo = "skip",
         showlegend = FALSE,
         name = "Totalt"
       ) |>
       plotly::add_bars(
+        data = stapel_filt_df,
         x = ~n_filt,
         y = ~Branschgrupp,
         orientation = "h",
@@ -606,7 +491,10 @@ foretag_server <- function(input, output, session) {
           color = "#00374e",
           opacity = 1
         ),
-        hovertext = ~tooltip,
+        # I() tvingar fram en vektor (array) i JSON-serialiseringen även när
+        # det bara finns en rad - annars visas ibland literalen "%{hovertext}"
+        # i stället för den faktiska texten när endast en branschgrupp matchar.
+        hovertext = I(stapel_filt_df$tooltip),
         hovertemplate = "%{hovertext}<extra></extra>",
         showlegend = FALSE,
         name = "Filtrerat"
@@ -623,7 +511,7 @@ foretag_server <- function(input, output, session) {
               color = "#00374e"
             )
           ),
-          range = c(0, max_x * 1.55),
+          range = c(0, max_x * 1.35),
           zeroline = FALSE,
           showgrid = FALSE,
           tickfont = list(
@@ -639,14 +527,14 @@ foretag_server <- function(input, output, session) {
           showgrid = FALSE,
           zeroline = FALSE,
           categoryorder = "array",
-          categoryarray = stapel_df$Branschgrupp
+          categoryarray = full_cat_order
         ),
 
         annotations = etiketter,
 
         margin = list(
           l = 0,
-          r = 120,
+          r = 90,
           t = 5,
           b = 45
         ),
@@ -705,7 +593,9 @@ foretag_server <- function(input, output, session) {
       scrollWheelZoom = FALSE,
       doubleClickZoom = FALSE,
       touchZoom = FALSE,
-      preferCanvas = TRUE
+      preferCanvas = TRUE,
+      zoomSnap = 0,
+      zoomDelta = 0.1
     )) %>%
       # Passa in kartan på länets faktiska utbredning (tightare än fast zoom)
       fitBounds(bb[["xmin"]], bb[["ymin"]], bb[["xmax"]], bb[["ymax"]]) %>%
@@ -733,9 +623,9 @@ foretag_server <- function(input, output, session) {
     current_id <- input$kommun
 
     if (identical(clicked_id, current_id)) {
-      updateSelectInput(session, "kommun", selected = "Alla")
+      updateSelectizeInput(session, "kommun", selected = "Alla")
     } else {
-      updateSelectInput(session, "kommun", selected = clicked_id)
+      updateSelectizeInput(session, "kommun", selected = clicked_id)
     }
   })
 
@@ -871,7 +761,8 @@ foretag_server <- function(input, output, session) {
     leaflet(d,
             options = leafletOptions(
               zoomControl = FALSE, dragging = FALSE, scrollWheelZoom = FALSE,
-              doubleClickZoom = FALSE, touchZoom = FALSE, preferCanvas = TRUE
+              doubleClickZoom = FALSE, touchZoom = FALSE, preferCanvas = TRUE,
+              zoomSnap = 0, zoomDelta = 0.1
             )
     ) %>%
       addMapPane("importBasePane", zIndex = 410) %>%
@@ -900,7 +791,8 @@ foretag_server <- function(input, output, session) {
     leaflet(d,
             options = leafletOptions(
               zoomControl = FALSE, dragging = FALSE, scrollWheelZoom = FALSE,
-              doubleClickZoom = FALSE, touchZoom = FALSE, preferCanvas = TRUE
+              doubleClickZoom = FALSE, touchZoom = FALSE, preferCanvas = TRUE,
+              zoomSnap = 0, zoomDelta = 0.1
             )
     ) %>%
       addMapPane("exportBasePane", zIndex = 410) %>%

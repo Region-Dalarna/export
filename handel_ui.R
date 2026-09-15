@@ -49,41 +49,67 @@ handel_ui <- fluidPage(
         .js-plotly-plot .plotly .cursor-crosshair { cursor: default !important; }
            "))
   ),
-  # Rad 1: karta + summering
+  # Rad 1: kort + utveckling över tid (vänster) | produktgrupper (mitten) | karta (höger)
   fluidRow(
+
+    # Vänsterkolumn: kort/summering överst, diagrammet "utveckling över tid" under -
+    # inpackat i en flex-kolumn så att diagrammet alltid hamnar längst ned, i
+    # linje med nederkanten på mittenkolumnens diagram (700px).
     column(
-      width = 6,
-      fluidRow(
-        column(12,  textOutput("lanText"), style = "margin-bottom: 4px;")
-      ),
-      fluidRow(
-        column(12, textOutput("importExportText"), style = "margin-bottom: 8px;")
-      ),
-      br(),
-      fluidRow(
-        column(6, textOutput("sumExport"), align = "center"),
-        column(6, textOutput("sumImport"), align = "center")
-      ),
-      fluidRow(
-        column(6, textOutput("brodtext1"), align = "center"),
-        column(6, textOutput("brodtext2"), align = "center")
-      ),
-      br(),
-      fluidRow(
-        column(6, textOutput("exportPercText"), align = "center"),
-        column(6, textOutput("netBalansText"), align = "center")
-      ),
-      fluidRow(
-        column(6, textOutput("brodtext3"), align = "center"),
-        column(6, textOutput("brodtext4"), align = "center")
+      width = 4,
+      tags$div(
+        style = "height: 700px; display: flex; flex-direction: column;",
+        fluidRow(
+          column(12, textOutput("lanText"), style = "margin-bottom: 4px;")
+        ),
+        br(),
+        fluidRow(
+          column(6, textOutput("sumExport"), align = "center"),
+          column(6, textOutput("sumImport"), align = "center")
+        ),
+        fluidRow(
+          column(6, textOutput("brodtext1"), align = "center"),
+          column(6, textOutput("brodtext2"), align = "center")
+        ),
+        br(),
+        fluidRow(
+          column(6, textOutput("exportPercText"), align = "center"),
+          column(6, textOutput("netBalansText"), align = "center")
+        ),
+        fluidRow(
+          column(6, textOutput("brodtext3"), align = "center"),
+          column(6, textOutput("brodtext4"), align = "center")
+        ),
+        tags$div(
+          style = "margin-top: auto;",
+          fluidRow(
+            column(
+              width = 12,
+              plotlyOutput("year_graph", height = "300px")
+            )
+          )
+        )
       )
     ),
+
+    # Mittenkolumn: produktgrupper
     column(
-      width = 6,
+      width = 4,
+      fluidRow(
+        column(
+          width = 12,
+          plotlyOutput("bar_graph", height = "700px")
+        )
+      )
+    ),
+
+    # Högerkolumn: länskarta
+    column(
+      width = 4,
       fluidRow(
         style = "height: 700px;",
         tags$div(
-          style = "position: relative; height: 100%; max-width: 480px; margin: 0 auto;",
+          style = "position: relative; height: 100%; margin-left: 0; margin-right: 0;",
           leafletOutput("lansKarta", height = "700px"),
           tags$div(
             class = "kart-tips-overlay kart-tips-sverige",
@@ -94,34 +120,11 @@ handel_ui <- fluidPage(
     )
   ),
 
-  br(),
+  tags$div(style = "margin-top: 28px;"),
 
-  # Rad 2: utveckling över tid + produktgrupper
+  # Rad 2: varifrån kommer importen + var går exporten (oförändrad, bara flyttad ned)
   fluidRow(
-    column(
-      width = 6,
-      fluidRow(
-        column(
-          width = 12,
-          plotlyOutput("year_graph", height = "300px")
-        )
-      )
-    ),
-    column(
-      width = 6,
-      fluidRow(
-        column(
-          width = 12,
-          plotlyOutput("bar_graph", height = "700px")
-        )
-      )
-    )
-  ),
-
-  br(),
-
-  # Rad 3: varifrån kommer importen + var går exporten
-  fluidRow(
+    style = "margin-bottom: 30px;",
     column(
       width = 6,
       fluidRow(

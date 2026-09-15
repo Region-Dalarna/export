@@ -150,7 +150,9 @@ handel_server <- function(input, output, session) {
       dragging = FALSE,
       scrollWheelZoom = FALSE,
       doubleClickZoom = FALSE,
-      touchZoom = FALSE
+      touchZoom = FALSE,
+      zoomSnap = 0,
+      zoomDelta = 0.1
     )) %>%
       addMapPane("lanPane", zIndex = 405) %>%
       addMapPane("dimPane", zIndex =410) %>%
@@ -160,8 +162,9 @@ handel_server <- function(input, output, session) {
         data = md,
         fillColor = ~pal_lan(NettoHandel),
         fillOpacity = 0.7,
-        color = "white",
+        color = "#7b93a1",
         weight = 0.6,
+        opacity = 0.7,
         label = ~paste0("Län: ", Lan,
                         "
 
@@ -335,10 +338,10 @@ handel_server <- function(input, output, session) {
     for (i in seq_along(gp$x$data)) {
       nm <- gp$x$data[[i]]$name
       vals <- gp$x$data[[i]]$y
-      formatted <- format(vals, big.mark = " ", scientific = FALSE, trim = TRUE)
+      formatted <- formatC(vals, format = "f", digits = 1, big.mark = " ")
       gp$x$data[[i]]$customdata <- formatted
       label <- if (grepl("Import", nm)) "Import" else "Export"
-      gp$x$data[[i]]$hovertemplate <- paste0(label, ": %{customdata}<extra></extra>")
+      gp$x$data[[i]]$hovertemplate <- paste0(label, ": %{customdata} mdkr<extra></extra>")
     }
 
     gp
@@ -385,7 +388,7 @@ handel_server <- function(input, output, session) {
         plot.title = element_text(
           face = "bold",
           family = "Fieldwork Geo Demibold",
-          size = 16,
+          size = 14,
           color = "#00374e",
           hjust = 0,
           margin = margin(b = 6)
@@ -405,8 +408,11 @@ handel_server <- function(input, output, session) {
     plt <- plotly::ggplotly(pl, tooltip = NULL) %>%
       plotly::layout(
         dragmode = FALSE,
-        hovermode = "y unified",
-        margin = list(l = 210, r = 20, t = 55, b = 45),
+        # "y unified" gav en konstig/felplacerad hover-ruta med dodgade staplar
+        # (två staplar per branschgrupp) - "closest" visar bara den stapel
+        # muspekaren faktiskt är på.
+        hovermode = "closest",
+        margin = list(l = 210, r = 10, t = 60, b = 45),
         xaxis = list(
           title = list(text = "mdkr",
                        font = list(family = "Fieldwork Geo Demibold, Arial, sans-serif", size = 12, color = "#00374e")),
@@ -424,11 +430,13 @@ handel_server <- function(input, output, session) {
 
     for (i in seq_along(plt$x$data)) {
       nm <- plt$x$data[[i]]$name
-      vals <- plt$x$data[[i]]$y
-      formatted <- format(vals, big.mark = " ", scientific = FALSE, trim = TRUE)
+      # Horisontellt diagram (Volym mappat till x, Kategori till y) - det är
+      # alltså x-vektorn som innehåller de faktiska mdkr-värdena, inte y.
+      vals <- plt$x$data[[i]]$x
+      formatted <- formatC(vals, format = "f", digits = 1, big.mark = " ")
       plt$x$data[[i]]$customdata <- formatted
       label <- if (grepl("Import", nm)) "Import" else "Export"
-      plt$x$data[[i]]$hovertemplate <- paste0(label, ": (%{customdata}) mdkr<extra></extra>")
+      plt$x$data[[i]]$hovertemplate <- paste0(label, ": %{customdata} mdkr<extra></extra>")
     }
 
     plt
@@ -437,7 +445,8 @@ handel_server <- function(input, output, session) {
   # Regiondata (export/import per världsdel) - ingen geometri behövs för staplar
   region_data <- reactive({
     lander_df %>%
-      dplyr::filter(Ar == maxYear, regionkod == valt_regionkod()) %>%
+      dplyr::filter(Ar == maxYear, regionkod == valt_regionkod(),
+                    varldsdel != "Antarktis") %>%
       dplyr::group_by(varldsdel) %>%
       dplyr::summarise(
         export_vol = sum(export_mdkr, na.rm = TRUE),
@@ -451,10 +460,13 @@ handel_server <- function(input, output, session) {
     d <- region_data()
     req(nrow(d) > 0)
     d <- d[order(d$export_vol), ]
+    # Punkt: lite extra luft mellan etikett och stapel - ett par osynliga
+    # mellanslag i etiketten skapar ett litet gap innan stapeln börjar.
+    d$varldsdel_label <- paste0(d$varldsdel, "   ")
     plotly::plot_ly(
       d,
       x = ~export_vol,
-      y = ~factor(varldsdel, levels = varldsdel),
+      y = ~factor(varldsdel_label, levels = varldsdel_label),
       type = "bar", orientation = "h",
       marker = list(color = "#00a064"),
       hovertext = ~paste0(varldsdel, ": ", fmt_mdkr(export_vol), " mdkr"),
@@ -466,8 +478,9 @@ handel_server <- function(input, output, session) {
                      zeroline = FALSE, showgrid = TRUE, gridcolor = "#e6e6e6",
                      tickfont = list(family = "Roboto, Arial, sans-serif", size = 10, color = "#00374e")),
         yaxis = list(title = "",
-                     tickfont = list(family = "Roboto, Arial, sans-serif", size = 12, color = "#00374e")),
-        margin = list(l = 0, r = 10, t = 5, b = 30),
+                     tickfont = list(family = "Roboto, Arial, sans-serif", size = 12, color = "#00374e"),
+                     automargin = TRUE),
+        margin = list(l = 15, r = 10, t = 5, b = 30),
         paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)",
         dragmode = FALSE
       ) |>
@@ -481,10 +494,11 @@ handel_server <- function(input, output, session) {
     d <- region_data()
     req(nrow(d) > 0)
     d <- d[order(d$import_vol), ]
+    d$varldsdel_label <- paste0(d$varldsdel, "   ")
     plotly::plot_ly(
       d,
       x = ~import_vol,
-      y = ~factor(varldsdel, levels = varldsdel),
+      y = ~factor(varldsdel_label, levels = varldsdel_label),
       type = "bar", orientation = "h",
       marker = list(color = "#00374e"),
       hovertext = ~paste0(varldsdel, ": ", fmt_mdkr(import_vol), " mdkr"),
@@ -496,8 +510,9 @@ handel_server <- function(input, output, session) {
                      zeroline = FALSE, showgrid = TRUE, gridcolor = "#e6e6e6",
                      tickfont = list(family = "Roboto, Arial, sans-serif", size = 10, color = "#00374e")),
         yaxis = list(title = "",
-                     tickfont = list(family = "Roboto, Arial, sans-serif", size = 12, color = "#00374e")),
-        margin = list(l = 0, r = 10, t = 5, b = 30),
+                     tickfont = list(family = "Roboto, Arial, sans-serif", size = 12, color = "#00374e"),
+                     automargin = TRUE),
+        margin = list(l = 15, r = 10, t = 5, b = 30),
         paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)",
         dragmode = FALSE
       ) |>

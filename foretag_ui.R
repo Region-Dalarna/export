@@ -98,7 +98,7 @@ foretag_ui <- fluidPage(
   #   )
   # ),
 
-  # Filterkolumn, kommunkarta, stapeldiagram, export- och importkartor
+  # Filterkolumn (egen kolumn, oberoende höjd) + huvudinnehåll (kartor/diagram + tabell)
   fluidRow(
 
     # 2. Filterkolumn
@@ -114,6 +114,7 @@ foretag_ui <- fluidPage(
           selectInput("kommun", "Kommun", choices = NULL),
           selectInput("anstallda", "Storleksklass", choices = NULL),
           selectInput("juridisk", "Branschgrupp", choices = NULL),
+          selectInput("bolagsform", "Bolagsform", choices = NULL),
 
           # selectInput("kluster", "Kluster", choices = c("Alla"), selected = "Alla"),
 
@@ -138,64 +139,86 @@ foretag_ui <- fluidPage(
           outputId = "downloadAll",
           label = "Ladda ner all data till Excel"
         )
-      )
-    ),
-
-    # 3. Kommunkarta
-    column(
-      width = 3,
-
-      h4("Kommuner"),
+      ),
 
       fluidRow(
-        style = "height: 500px;",
-        tags$div(
-          style = "position: relative; height: 100%;",
-          leafletOutput("karta_kommun", height = "500px"),
-          tags$div(
-            class = "kart-tips-overlay kart-tips-dalarna",
-            HTML("<svg class='kart-tips-arrow' width='70' height='60' viewBox='0 0 70 60' xmlns='http://www.w3.org/2000/svg'><path d='M9 54 C 17 30, 36 18, 57 13' fill='none' stroke='#00374e' stroke-width='2.4' stroke-linecap='round'/><polygon points='66,11 59,20 55,6' fill='#00374e'/></svg><div class='kart-tips'>Tips!<br>Klicka för att se<br>en specifik kommun</div>")
+        style = "margin-top: 16px;",
+        div(
+          class = "info-box",
+          HTML(
+            "<strong>Källa:</strong> Uppgifterna kommer från SCB:s
+            företagsregister och avser företag med säte i Dalarnas län."
           )
         )
       )
     ),
 
-    # 4. Stapeldiagram
-    column(
-      width = 4,
-
-      h4("Branschgrupper"),
-
-      plotlyOutput("stapel", height = "500px")
-    ),
-
-    # 5 och 6. Export- och importkartor
-    column(
-      width = 2,
-
-      fluidRow(
-        h4("Export"),
-        leafletOutput("exportKarta", height = "180px"),
-        style = "height: 225px;"
-      ),
-
-      fluidRow(
-        h4("Import"),
-        leafletOutput("importKarta", height = "180px"),
-        style = "height: 225px;"
-      )
-    )
-  ),
-
-  # 7. Nedre tabell
-  fluidRow(
+    # Huvudinnehåll: kartor/diagram (rad 1) + tabell (rad 2) - ligger i en egen
+    # kolumn så att tabellen inte behöver vänta in filterkolumnens höjd (som
+    # annars styr hela radens höjd och skapar ett stort tomrum ovanför tabellen).
     column(
       width = 10,
-      offset = 2,
 
-      h4("Företagsstatistik"),
+      fluidRow(
 
-      DTOutput("tabell")
+        # 3. Kommunkarta
+        column(
+          width = 4,
+
+          h4("Kommuner"),
+
+          fluidRow(
+            style = "height: 500px;",
+            tags$div(
+              style = "position: relative; height: 100%;",
+              leafletOutput("karta_kommun", height = "500px"),
+              tags$div(
+                class = "kart-tips-overlay kart-tips-dalarna",
+                HTML("<svg class='kart-tips-arrow' width='70' height='60' viewBox='0 0 70 60' xmlns='http://www.w3.org/2000/svg'><path d='M9 54 C 17 30, 36 18, 57 13' fill='none' stroke='#00374e' stroke-width='2.4' stroke-linecap='round'/><polygon points='66,11 59,20 55,6' fill='#00374e'/></svg><div class='kart-tips'>Tips!<br>Klicka för att se<br>en specifik kommun</div>")
+              )
+            )
+          )
+        ),
+
+        # 4. Stapeldiagram
+        column(
+          width = 5,
+
+          h4("Branschgrupper"),
+
+          plotlyOutput("stapel", height = "500px")
+        ),
+
+        # 5 och 6. Export- och importkartor
+        column(
+          width = 3,
+          class = "exp-imp-col",
+
+          fluidRow(
+            h4("Export"),
+            leafletOutput("exportKarta", height = "210px"),
+            style = "height: 255px;"
+          ),
+
+          fluidRow(
+            h4("Import"),
+            leafletOutput("importKarta", height = "210px"),
+            style = "height: 255px;"
+          )
+        )
+      ),
+
+      # 7. Nedre tabell
+      fluidRow(
+        style = "margin-top: 30px; margin-bottom: 30px;",
+        column(
+          width = 12,
+
+          h4("Företagsuppgifter"),
+
+          DTOutput("tabell")
+        )
+      )
     )
   )
 )

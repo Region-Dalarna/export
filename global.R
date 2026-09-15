@@ -16,6 +16,11 @@ library(plotly)
 library(htmltools)
 library(here)
 library(tidyr)
+library(shiny.telemetry)
+
+# --- Telemetry ------------------------------------------------------
+telemetry <- Telemetry$new()
+# ---------------------------------------------------------------------
 
 # --- Inställningar -------------------------------------------------
 # Styr om branschgruppen "Övrigt" ska filtreras bort i Branschgrupper-diagrammet

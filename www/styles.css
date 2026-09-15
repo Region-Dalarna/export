@@ -293,10 +293,54 @@ table.dataTable th {
   cursor: default !important;
 }
 
+/* Faktaruta under filter/nedladdningsknappar (Företagsstatistik) */
+.info-box {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background-color: #ffffff;
+  border-left: 3px solid var(--rd-bla);
+  border-radius: 2px;
+  font-size: 10px !important;
+  color: var(--rd-bla);
+  line-height: 1.35;
+}
+
+/* Punkt 2 (Företagsstatistik): mindre vit yta runt export/import-kartorna -
+   dra ut kartan lite utanfor kolumnens padding så världskartan fyller ytan bättre */
+.exp-imp-col .leaflet-container {
+  margin-left: -8px !important;
+  width: calc(100% + 16px) !important;
+}
+
+/* Punkt 3: hover-etiketten på export/import-kartorna (längst till höger) klipps
+   annars av kolumnens/radens overflow. Släpp overflow bara på kolumnen (inte på
+   själva leaflet-lagren - de måste behålla overflow:hidden för att hålla sin
+   höjd, annars växer kartan och skapar tomrum under). */
+.exp-imp-col {
+  overflow: visible !important;
+  position: relative;
+  z-index: 20;
+}
+.exp-imp-col .leaflet-tooltip {
+  z-index: 2000 !important;
+}
+
+/* Punkt (Export-fliken): plotly klipper ibland av långa rubriker mot sin egen
+   SVG-container. Släpp overflow så rubriken alltid får plats. */
+.svg-container,
+.js-plotly-plot .plot-container {
+  overflow: visible !important;
+}
+
 /* Bootstrap-rader/kolumner */
 .row {
   margin-left: 0 !important;
   margin-right: 0 !important;
+  overflow: visible !important;
+}
+
+.container-fluid {
+  overflow: visible !important;
 }
 
 .col-sm-6, .col-md-6, .col-lg-6 {

@@ -6,12 +6,15 @@ navbarPage(
   id = "huvudflik",
   collapsible = TRUE,
 
-  header = tags$head(
-    tags$link(
-      rel = "icon",
-      type = "image/x-icon",
-      href = "favicon.ico"
-    )
+  header = tagList(
+    tags$head(
+      tags$link(
+        rel = "icon",
+        type = "image/x-icon",
+        href = "favicon.ico"
+      )
+    ),
+    shiny.telemetry::use_telemetry()
   ),
 
   tabPanel("Företagsstatistik", foretag_ui),
