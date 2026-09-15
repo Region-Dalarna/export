@@ -16,11 +16,14 @@ library(plotly)
 library(htmltools)
 library(here)
 library(tidyr)
-library(shiny.telemetry)
+library(rdshinyappar)
 
-# --- Telemetry ------------------------------------------------------
-telemetry <- Telemetry$new()
-# ---------------------------------------------------------------------
+# --- Telemetry --------------------------------------------------------
+# Delad telemetry-lösning (samma mönster som övriga Region Dalarna-appar) -
+# skapa_telemetry() registrerar appen (bl.a. i adminportalens statistik),
+# till skillnad från att bara anropa shiny.telemetry direkt.
+telemetry <- skapa_telemetry("export")
+# ------------------------------------------------------------------------
 
 # --- Inställningar -------------------------------------------------
 # Styr om branschgruppen "Övrigt" ska filtreras bort i Branschgrupper-diagrammet

@@ -313,11 +313,17 @@ table.dataTable th {
 }
 
 /* Punkt 3: hover-etiketten på export/import-kartorna (längst till höger) klipps
-   annars av kolumnens/radens overflow. Släpp overflow bara på kolumnen (inte på
-   själva leaflet-lagren - de måste behålla overflow:hidden för att hålla sin
-   höjd, annars växer kartan och skapar tomrum under). */
-.exp-imp-col {
+   annars av leaflet-lagrens overflow:hidden (CSS overflow på en förälder
+   klipper alla barn, oavsett vad barnet själv anger). Vitytan vi tidigare
+   misstänkte berodde på detta visade sig bero på filterkolumnens höjd
+   (löst separat i layouten), så det är nu säkert att släppa overflow här. */
+.exp-imp-col,
+.exp-imp-col .leaflet-container,
+.exp-imp-col .leaflet-pane,
+.exp-imp-col .leaflet-tooltip-pane {
   overflow: visible !important;
+}
+.exp-imp-col {
   position: relative;
   z-index: 20;
 }

@@ -12,9 +12,9 @@ navbarPage(
         rel = "icon",
         type = "image/x-icon",
         href = "favicon.ico"
-      )
-    ),
-    shiny.telemetry::use_telemetry()
+      ),
+      telemetri_ui(telemetry)  # telemetri_ui(NULL) förväntas vara ofarligt (inga head-taggar läggs till)
+    )
   ),
 
   tabPanel("Företagsstatistik", foretag_ui),

@@ -9,7 +9,7 @@ library(openxlsx)
 library(plotly)
 
 # Inputdata
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_shinyappar.R")
+# func_shinyappar.R laddas nu via library(rdshinyappar) i global.R.
 #source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_GIS.R", encoding = "utf-8", echo = FALSE)
 #source("C:/Users/SE1C3T/Documents/Uppdrag/Dalarna/Arbetsmapp/main/script/api_r.r", encoding = "utf-8", echo = FALSE)
 # source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_API.R", encoding = "utf-8", echo = FALSE)
