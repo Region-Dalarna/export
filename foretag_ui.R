@@ -112,13 +112,12 @@ foretag_ui <- fluidPage(
           h4("Filter"),
 
           selectInput("kommun", "Kommun", choices = NULL),
-          selectInput("anstallda", "Storleksklass", choices = NULL),
-          selectInput("juridisk", "Branschgrupp", choices = NULL),
-          selectInput("bolagsform", "Bolagsform", choices = NULL),
+          selectInput("anstallda", "Antal anställda", choices = NULL),
+          selectInput("juridisk", "Bransch", choices = NULL),
 
           # selectInput("kluster", "Kluster", choices = c("Alla"), selected = "Alla"),
 
-          selectInput("exportVolym", "Exportvolym", choices = NULL),
+          selectInput("exportVolym", "Exportomsättning", choices = NULL),
           selectInput("exportRegion", "Exportregion", choices = NULL),
           selectInput("importVolym", "Importvolym", choices = NULL),
           selectInput("importRegion", "Importregion", choices = NULL)
@@ -147,7 +146,9 @@ foretag_ui <- fluidPage(
           class = "info-box",
           HTML(
             "<strong>Källa:</strong> Uppgifterna kommer från SCB:s
-            företagsregister och avser företag med säte i Dalarnas län."
+            företagsregister och avser aktiebolag med säte i Dalarnas län.
+            Företag med 0 anställda är exkluderade, liksom företag där både
+            export- och importomsättning ligger under 250 tkr."
           )
         )
       )
@@ -184,7 +185,7 @@ foretag_ui <- fluidPage(
         column(
           width = 5,
 
-          h4("Branschgrupper"),
+          h4("Bransch"),
 
           plotlyOutput("stapel", height = "500px")
         ),
@@ -214,7 +215,7 @@ foretag_ui <- fluidPage(
         column(
           width = 12,
 
-          h4("Företagsuppgifter"),
+          h4("Företagsstatistik"),
 
           DTOutput("tabell")
         )

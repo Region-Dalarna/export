@@ -2,7 +2,7 @@
 # foretag_ui och handel_ui är fullständiga fluidPage-objekt som definieras i global.R.
 
 navbarPage(
-  title = "Exportarena Dalarna",
+  title = "Exportarena Dalarna – varuexport",
   id = "huvudflik",
   collapsible = TRUE,
 
@@ -17,6 +17,6 @@ navbarPage(
     )
   ),
 
-  tabPanel("Företagsstatistik", foretag_ui),
-  tabPanel("Export",            handel_ui)
+  tabPanel("Exportstatistik Företag", foretag_ui),
+  tabPanel("Exportstatistik Regional",  handel_ui)
 )

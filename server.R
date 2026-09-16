@@ -6,7 +6,7 @@ function(input, output, session) {
   # tillgängligt) - telemetri_server() skyddar tyvärr inte mot det själv, så
   # vi hoppar bara över anropet lokalt. På servrarna finns telemetry alltid.
   if (!is.null(telemetry)) {
-    telemetri_server(telemetry, navigation_id = "huvudflik", forsta_flik = "Företagsstatistik")
+    telemetri_server(telemetry, navigation_id = "huvudflik", forsta_flik = "Exportstatistik Företag")
   }
 
   foretag_server(input, output, session)

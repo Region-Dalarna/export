@@ -107,20 +107,37 @@ if ("storleksklass fin, oms" %in% names(dataset_df)) {
   dataset_df$Omsättningsklass <- NA_character_
 }
 
-# Visa bara aktiebolag, handels-/kommanditbolag och enskilda företag (fysiska personer).
-# "Övriga aktiebolag" döps om till "Aktiebolag".
-.behall_bolagsform <- c("Övriga aktiebolag", "Handelsbolag, kommanditbolag", "Fysiska personer")
+# Visa bara aktiebolag. "Övriga aktiebolag" döps om till "Aktiebolag".
+.behall_bolagsform <- c("Övriga aktiebolag")
 if (any(trimws(dataset_df$Bolagsform) %in% .behall_bolagsform)) {
   dataset_df <- dataset_df %>%
     dplyr::filter(trimws(Bolagsform) %in% .behall_bolagsform) %>%
     dplyr::mutate(Bolagsform = dplyr::recode(trimws(Bolagsform),
-                                             "Övriga aktiebolag" = "Aktiebolag",
-                                             "Fysiska personer" = "Enskilda firmor"))
+                                             "Övriga aktiebolag" = "Aktiebolag"))
 } else {
   warning("Inga av bolagsformerna (", paste(.behall_bolagsform, collapse = ", "),
           ") hittades i Bolagsform - behåller alla. Kontrollera värdena i 'juridisk form'.")
 }
 rm(.behall_bolagsform)
+
+# Punkt: ta bort företag med "0 anställda" (Storleksklass).
+dataset_df <- dataset_df %>%
+  dplyr::filter(trimws(Storleksklass) != "0 anställda") %>%
+  dplyr::mutate(Storleksklass = droplevels(Storleksklass))
+
+# Punkt: minst en av export-/importomsättning måste vara högre än "1-249 tkr"
+# (dvs "0 kr" och "1-249 tkr" räknas bort - men bara om BÅDA sidorna ligger
+# där; det räcker att en av dem ligger högre). NA (ingen export/import alls)
+# räknas som lågt.
+.for_lag_volym <- c("0 kr", "1-249 tkr")
+dataset_df <- dataset_df %>%
+  dplyr::mutate(
+    .exp_lag = tidyr::replace_na(as.character(ExpStklText), "0 kr") %in% .for_lag_volym,
+    .imp_lag = tidyr::replace_na(as.character(ImpStklText), "0 kr") %in% .for_lag_volym
+  ) %>%
+  dplyr::filter(!(.exp_lag & .imp_lag)) %>%
+  dplyr::select(-.exp_lag, -.imp_lag)
+rm(.for_lag_volym)
 
 # Branschgrupp: joinar in Gunillas 20 grupper utifrån SNI-koden (bransch_1, kod).
 # Mappningen ligger temporärt i data/sni_branschgrupp.xlsx - flyttas till databasen
@@ -197,10 +214,6 @@ foretag_server <- function(input, output, session) {
                       choices = c("Alla", sort(unique(trimws(dataset_df$Branschgrupp)))),
                       selected = "Alla")
 
-    updateSelectInput(session, "bolagsform",
-                      choices = c("Alla", sort(unique(trimws(dataset_df$Bolagsform)))),
-                      selected = "Alla")
-
     updateSelectInput(session, "anstallda",
                       choices = c("Alla", levels(dataset_df$Storleksklass)),
                       selected = "Alla")
@@ -212,7 +225,7 @@ foretag_server <- function(input, output, session) {
                          selected = "Alla")
 
     updateSelectInput(session, "exportVolym",
-                      choices = c("Alla" = "Alla", levels(dataset_df$ExpStklText)),
+                      choices = c("Alla" = "Alla", setdiff(levels(dataset_df$ExpStklText), c("0 kr", "1-249 tkr"))),
                       selected = "Alla")
 
     updateSelectInput(session, "exportRegion",
@@ -220,7 +233,7 @@ foretag_server <- function(input, output, session) {
                       selected = "Alla")
 
     updateSelectInput(session, "importVolym",
-                      choices = c("Alla" = "Alla", levels(dataset_df$ImpStklText)),
+                      choices = c("Alla" = "Alla", setdiff(levels(dataset_df$ImpStklText), c("0 kr", "1-249 tkr"))),
                       selected = "Alla")
 
     updateSelectInput(session, "importRegion",
@@ -230,7 +243,7 @@ foretag_server <- function(input, output, session) {
 
   # Filtrera företagsdata
   data_filt <- reactive({
-    req(input$juridisk, input$anstallda, input$bolagsform)
+    req(input$juridisk, input$anstallda)
     df <- dataset_df
 
     if (!is.null(input$kommun) && input$kommun != "Alla") {
@@ -238,9 +251,6 @@ foretag_server <- function(input, output, session) {
     }
     if (input$juridisk != "Alla") {
       df <- df %>% dplyr::filter(Branschgrupp == input$juridisk)
-    }
-    if (input$bolagsform != "Alla") {
-      df <- df %>% dplyr::filter(Bolagsform == input$bolagsform)
     }
     if (input$anstallda != "Alla") {
       df <- df %>% dplyr::filter(Storleksklass == input$anstallda)
@@ -261,15 +271,12 @@ foretag_server <- function(input, output, session) {
   })
 
   data_filt_no_kommun <- reactive({
-    req(input$juridisk, input$anstallda, input$bolagsform)
+    req(input$juridisk, input$anstallda)
     df <- dataset_df
 
     # DO NOT apply the kommun filter here
     if (input$juridisk != "Alla") {
       df <- df %>% dplyr::filter(Branschgrupp == input$juridisk)
-    }
-    if (input$bolagsform != "Alla") {
-      df <- df %>% dplyr::filter(Bolagsform == input$bolagsform)
     }
     if (input$anstallda != "Alla") {
       df <- df %>% dplyr::filter(Storleksklass == input$anstallda)
@@ -300,15 +307,18 @@ foretag_server <- function(input, output, session) {
         Företagsnamn,
         Kommun,
         Omsättningsklass,
+        ExpStklText,
         Storleksklass,
         Branschgrupp,
         "Huvudsaklig bransch",
-        ExpStklText,
         ImpStklText,
         Bolagsform
       ) |>
       dplyr::rename(
-        Exportvolym = ExpStklText,
+        `Total omsättning` = Omsättningsklass,
+        Exportomsättning = ExpStklText,
+        `Antal anställda` = Storleksklass,
+        Bransch = Branschgrupp,
         Importvolym = ImpStklText
       )
 
@@ -332,10 +342,10 @@ foretag_server <- function(input, output, session) {
         columnDefs = list(
           list(
             width = '50px',
-            targets = c(1,3)),
+            targets = c(1,4)),
           list(
             width = '100px',
-            targets = c(0,2,4,5,6,7,8)))
+            targets = c(0,2,3,5,6,7,8)))
       )
     )
     #paste(nrow(data_filt()), "matchande företag")
@@ -821,6 +831,13 @@ foretag_server <- function(input, output, session) {
         Företagsnamn, Telefon, Kommun, Postnummer,
         Storleksklass, Omsättningsklass, ExpStklText, ImpStklText,
         Kluster, `Huvudsaklig bransch`, Branschgrupp, Bolagsform
+      ) %>%
+      dplyr::rename(
+        `Antal anställda` = Storleksklass,
+        `Total omsättning` = Omsättningsklass,
+        Exportomsättning = ExpStklText,
+        Importvolym = ImpStklText,
+        Bransch = Branschgrupp
       )
   })
 

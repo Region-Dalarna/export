@@ -115,7 +115,8 @@ handel_ui <- fluidPage(
           leafletOutput("lansKarta", height = "700px"),
           tags$div(
             class = "kart-tips-overlay kart-tips-sverige",
-            HTML("<div class='kart-tips'>Tips!<br>Klicka för att se<br>ett specifikt län</div><svg class='kart-tips-arrow' width='70' height='66' viewBox='0 0 70 66' xmlns='http://www.w3.org/2000/svg'><path d='M61 12 C 53 36, 34 48, 13 53' fill='none' stroke='#00374e' stroke-width='2.4' stroke-linecap='round'/><polygon points='4,55 11,46 15,60' fill='#00374e'/></svg>")
+            uiOutput("kartTipsText", inline = TRUE),
+            HTML("<svg class='kart-tips-arrow' width='70' height='66' viewBox='0 0 70 66' xmlns='http://www.w3.org/2000/svg'><path d='M61 12 C 53 36, 34 48, 13 53' fill='none' stroke='#00374e' stroke-width='2.4' stroke-linecap='round'/><polygon points='4,55 11,46 15,60' fill='#00374e'/></svg>")
           )
         )
       )

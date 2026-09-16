@@ -118,6 +118,14 @@ handel_server <- function(input, output, session) {
   # Geo-text för rubriker: versal form ("Hela Sverige") resp. gemen,
   # löpande form ("hela Sverige") när den står mitt i en mening.
   geo_versal <- reactive(if (is.null(rv$sel_region)) "Hela Sverige" else rv$sel_region)
+
+  output$kartTipsText <- renderUI({
+    if (is.null(rv$sel_regionkod)) {
+      HTML("<div class='kart-tips'>Klicka på ett län<br>för att se statistik<br>för det specifikt.</div>")
+    } else {
+      HTML("<div class='kart-tips'>Klicka på länet<br>igen för att se<br>hela Sverige.</div>")
+    }
+  })
   geo_lopande <- reactive(if (is.null(rv$sel_region)) "hela Sverige" else rv$sel_region)
 
   mergedData <- reactive({
@@ -168,7 +176,7 @@ handel_server <- function(input, output, session) {
         label = ~paste0("Län: ", Lan,
                         "
 
-                        Nettohandel: ", fmt_mdkr(NettoHandel), " mdkr"),
+                        Handelsbalans: ", fmt_mdkr(NettoHandel), " mdkr"),
         layerId = ~lanskod,
         group = "lan",
         options = pathOptions(pane = "lanPane")
