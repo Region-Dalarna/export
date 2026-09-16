@@ -403,7 +403,14 @@ table.dataTable th {
    stapelkontext och vinner, medan kartans fyllda länsytor (lägre z-index
    internt) fortfarande ligger under tipstexten som tidigare. */
 .sverige-karta-wrap .leaflet-container {
-  z-index: auto;
+  /* Föregående försök (z-index: auto, för att undvika en egen stapelkontext
+     helt) räckte inte i praktiken - något annat (troligen Leaflets egna
+     interna lager) gjorde ändå att tipstexten kunde hamna ovanpå. Sätter nu
+     istället en uttrycklig, hög z-index på HELA kartans container, så att
+     kartans samlade stapelkontext (inklusive hover-lagret, som redan internt
+     ligger överst i Leaflets egen lagerordning) garanterat rankas ovanför
+     tipstexten (500) i sin gemensamma förälder. */
+  z-index: 600 !important;
   overflow: visible !important;
 }
 .sverige-karta-wrap .leaflet-pane,
