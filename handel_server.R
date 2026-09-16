@@ -173,10 +173,10 @@ handel_server <- function(input, output, session) {
         color = "#7b93a1",
         weight = 0.6,
         opacity = 0.7,
-        label = ~paste0("Län: ", Lan,
+        label = ~paste0(Lan, "s",
                         "
 
-                        Handelsbalans: ", fmt_mdkr(NettoHandel), " mdkr"),
+                        handelsbalans: ", fmt_mdkr(NettoHandel), " mdkr"),
         layerId = ~lanskod,
         group = "lan",
         options = pathOptions(pane = "lanPane")

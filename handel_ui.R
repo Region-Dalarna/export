@@ -111,6 +111,7 @@ handel_ui <- fluidPage(
       fluidRow(
         style = "height: 700px;",
         tags$div(
+          class = "sverige-karta-wrap",
           style = "position: relative; height: 100%; margin-left: 0; margin-right: 0;",
           leafletOutput("lansKarta", height = "700px"),
           tags$div(

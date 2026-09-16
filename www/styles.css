@@ -384,9 +384,38 @@ table.dataTable th {
 .kart-tips-dalarna .kart-tips { text-align: left; }
 /* Sverigekartan: ovanför Stockholm nära landmassan, pil ned-vänster (text över pilen) */
 .kart-tips-sverige {
-  right: 20%;
-  top: 50%;
+  right: 2%;
+  top: 48%;
   align-items: flex-end;
 }
 .kart-tips-sverige .kart-tips-arrow { margin-right: 6px; }
 .kart-tips-sverige .kart-tips { text-align: right; }
+
+/* Punkt 1-3 (Sverigekartan i Export-fliken):
+   1) Texten ovanför pilen ska ligga utanför/vid sidan av kartan, inte över den.
+   2) Hover-etiketten (länets namn) ska synas OVANPÅ tipstexten.
+   3) Hover-etiketten ska inte klippas av kartans platshållare nära kanten.
+   Leaflets egen .leaflet-container sätter overflow:hidden och har en egen
+   z-index-kontext, vilket annars stänger inne både klippning och stapling.
+   Genom att ta bort z-index på just den här kartans container (utan
+   position/z-index bildas ingen egen stapelkontext) konkurrerar Leaflets
+   interna tooltip-panel (hög z-index internt) direkt mot tipstexten i samma
+   stapelkontext och vinner, medan kartans fyllda länsytor (lägre z-index
+   internt) fortfarande ligger under tipstexten som tidigare. */
+.sverige-karta-wrap .leaflet-container {
+  z-index: auto;
+  overflow: visible !important;
+}
+.sverige-karta-wrap .leaflet-pane,
+.sverige-karta-wrap .leaflet-tooltip-pane {
+  overflow: visible !important;
+}
+.sverige-karta-wrap .leaflet-tooltip-pane {
+  /* OBS: bara tooltip-panelen ska höjas - inte alla .leaflet-pane (däribland
+     länspolygonernas egna "lanPane"), annars konkurrerar de på lika villkor
+     och DOM-ordningen kan göra att polygonerna vinner över hover-rutan. */
+  z-index: 2000 !important;
+}
+.sverige-karta-wrap .leaflet-tooltip {
+  z-index: 2000 !important;
+}
