@@ -4,3 +4,4 @@ library(DBI)
 library(RPostgres)
 library(sf)
 # ... lägg till fler paket vid behov
+library(shiny.telemetry) # anvands av skapa_telemetry() i rdshinyappar - maste finnas i renv.lock
