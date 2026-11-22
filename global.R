@@ -18,6 +18,10 @@ library(here)
 library(tidyr)
 library(rdshinyappar)
 
+# Felmeddelanden: på servern visas inga R-fel för användaren (sanitize = TRUE); felet skrivs ändå till appens logg
+# (se Adminportalen, Driftstatus - Loggar). Lokalt i RStudio visas felen i klartext för att underlätta felsökning.
+options(shiny.sanitize.errors = !interactive())
+
 # --- Telemetry --------------------------------------------------------
 # Delad telemetry-lösning (samma mönster som övriga Region Dalarna-appar) -
 # skapa_telemetry() registrerar appen (bl.a. i adminportalens statistik),
