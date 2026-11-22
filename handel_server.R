@@ -9,8 +9,9 @@ library(scales)  # for comma()
 library(plotly)
 library(here)
 
-source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_shinyappar.R", encoding = "utf-8", echo = FALSE)
-
+library(DBI)          # Id() mm. - laddades tidigare av func_shinyappar.R
+library(RPostgres)
+library(rdshinyappar)
 # ============================================================================
 #  Datakälla - VERIFIERA dessa innan körning
 # ============================================================================
